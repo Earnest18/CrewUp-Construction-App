@@ -2,6 +2,8 @@ package com.example.ConstructionApp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowInsetsController;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -27,6 +29,23 @@ public class ForgotPass extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
+        getWindow().getInsetsController().setSystemBarsAppearance(
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+        );
+
+        View main = findViewById(R.id.main);
+        ViewCompat.setOnApplyWindowInsetsListener(main, (v, insets) -> {
+            int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    topInset,
+                    v.getPaddingRight(),
+                    v.getPaddingBottom()
+            );
             return insets;
         });
 

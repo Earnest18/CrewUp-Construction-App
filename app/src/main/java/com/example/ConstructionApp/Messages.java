@@ -3,6 +3,8 @@ package com.example.ConstructionApp;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -10,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsetsController;
 
 import java.util.ArrayList;
 
@@ -29,6 +32,24 @@ public class Messages extends Fragment {
             Bundle savedInstanceState
     ) {
         View view = inflater.inflate(R.layout.fragment_messages, container, false);
+
+        requireActivity().getWindow().getInsetsController().setSystemBarsAppearance(
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+        );
+
+        View main = view.findViewById(R.id.main);
+
+        ViewCompat.setOnApplyWindowInsetsListener(main, (v, insets) -> {
+            int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    topInset,
+                    v.getPaddingRight(),
+                    v.getPaddingBottom()
+            );
+            return insets;
+        });
 
         // INIT RECYCLERVIEW
         rvMessages = view.findViewById(R.id.rvMessages);

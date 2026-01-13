@@ -3,6 +3,7 @@ package com.example.ConstructionApp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.WindowInsetsController;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -44,6 +45,23 @@ public class Login extends AppCompatActivity {
             return;
         }
          */
+
+        getWindow().getInsetsController().setSystemBarsAppearance(
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+        );
+
+        View main = findViewById(R.id.main);
+        ViewCompat.setOnApplyWindowInsetsListener(main, (v, insets) -> {
+            int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    topInset,
+                    v.getPaddingRight(),
+                    v.getPaddingBottom()
+            );
+            return insets;
+        });
 
         TextInputEditText edtEmail = findViewById(R.id.edtEmail);
         TextInputEditText edtpass = findViewById(R.id.edtPassword);

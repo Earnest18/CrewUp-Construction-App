@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsetsController;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -11,6 +12,8 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -51,6 +54,7 @@ public class Posts extends Fragment {
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
 
+
         View view = inflater.inflate(R.layout.fragment_post, container, false);
 
         db = FirebaseFirestore.getInstance();
@@ -59,6 +63,24 @@ public class Posts extends Fragment {
         recyclerview.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         posts = new ArrayList<>();
+
+        requireActivity().getWindow().getInsetsController().setSystemBarsAppearance(
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+        );
+
+        View main = view.findViewById(R.id.main);
+
+        ViewCompat.setOnApplyWindowInsetsListener(main, (v, insets) -> {
+            int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    topInset,
+                    v.getPaddingRight(),
+                    v.getPaddingBottom()
+            );
+            return insets;
+        });
 
         adapter = new PostAdapter(posts);
         recyclerview.setAdapter(adapter);

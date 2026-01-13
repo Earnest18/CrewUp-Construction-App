@@ -2,11 +2,14 @@ package com.example.ConstructionApp;
 
 import android.os.Bundle;
 
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsetsController;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -58,7 +61,27 @@ public class workers extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_workers, container, false);
+
+        View view = inflater.inflate(R.layout.fragment_workers, container, false);
+
+        requireActivity().getWindow().getInsetsController().setSystemBarsAppearance(
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+        );
+
+        View main = view.findViewById(R.id.main);
+
+        ViewCompat.setOnApplyWindowInsetsListener(main, (v, insets) -> {
+            int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    topInset,
+                    v.getPaddingRight(),
+                    v.getPaddingBottom()
+            );
+            return insets;
+        });
+
+        return view;
     }
 }

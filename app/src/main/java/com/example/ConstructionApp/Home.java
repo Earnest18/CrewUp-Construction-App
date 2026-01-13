@@ -3,6 +3,8 @@ package com.example.ConstructionApp;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -10,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsetsController;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
@@ -46,15 +49,35 @@ public class Home extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // Connect RecyclerView
+        requireActivity().getWindow().getInsetsController().setSystemBarsAppearance(
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+        );
+
+        View main = view.findViewById(R.id.main);
+
+        ViewCompat.setOnApplyWindowInsetsListener(main, (v, insets) -> {
+            int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+            v.setPadding(
+                    v.getPaddingLeft(),
+                    topInset,
+                    v.getPaddingRight(),
+                    v.getPaddingBottom()
+            );
+            return insets;
+        });
+
+        // RecyclerView setup
         recyclerPosts = view.findViewById(R.id.recyclerPosts);
         recyclerPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        // Adapter
         adapter = new PostAdapter(posts);
         recyclerPosts.setAdapter(adapter);
 
-        // Firebase query ordered by timestamp descending
+        // Firestore
+        db = FirebaseFirestore.getInstance();
+        posts = new ArrayList<>();
+
         db.collection("posts")
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .addSnapshotListener((value, error) -> {
@@ -64,18 +87,25 @@ public class Home extends Fragment {
                     for (QueryDocumentSnapshot doc : value) {
                         String title = doc.getString("title");
                         String content = doc.getString("content");
-                        long timestamp = doc.getLong("timestamp") != null ? doc.getLong("timestamp") : 0;
+                        long timestamp = doc.getLong("timestamp") != null
+                                ? doc.getLong("timestamp")
+                                : 0;
 
-                        String formattedTime = formatTimestamp(timestamp);
-
-                        // For now, name is static "User"
-                        posts.add(new Post("Earnest Reyes", title, content, formattedTime));
+                        posts.add(new Post(
+                                "Earnest Reyes",
+                                title,
+                                content,
+                                formatTimestamp(timestamp)
+                        ));
                     }
                     adapter.notifyDataSetChanged();
                 });
 
         return view;
     }
+
+
+
 
     // Helper to format timestamp nicely
     private String formatTimestamp(long millis) {

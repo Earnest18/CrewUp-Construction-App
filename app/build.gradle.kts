@@ -52,8 +52,11 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("pl.droidsonroids.gif:android-gif-drawable:1.2.23")
     implementation(libs.recyclerview)
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+
 }

@@ -1,11 +1,16 @@
 package com.example.ConstructionApp;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowInsetsController;
 import android.widget.Button;
@@ -15,23 +20,38 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class SignUp extends AppCompatActivity {
 
     FirebaseAuth mAuth;
     private FirebaseFirestore db;
+
+    private static final int LOCATION_REQUEST_CODE = 100;
+
+    private FusedLocationProviderClient fusedLocationClient;
+    private String userAddress = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +60,7 @@ public class SignUp extends AppCompatActivity {
         setContentView(R.layout.activity_sign_up);
 
         db = FirebaseFirestore.getInstance();
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         getWindow().getInsetsController().setSystemBarsAppearance(
                 WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
@@ -109,11 +130,12 @@ public class SignUp extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             saveUserToFirestore(user, emailTxt, passTxt);
                             Toast.makeText(SignUp.this, "Registered Successfully!", Toast.LENGTH_SHORT).show();
-
                             Intent intent = new Intent(this, MainActivity.class);
                             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                             PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
                                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+
+                            showLocationDialog();
 
                             NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
                             manager.cancel(1);
@@ -133,6 +155,11 @@ public class SignUp extends AppCompatActivity {
 
                             manager.notify(1, builder.build());
 
+                            username.setText(null);
+                            email.setText(null);
+                            password.setText(null);
+                            confirmpass.setText(null);
+
                         } else {
                             Toast.makeText(SignUp.this,
                                     task.getException().getMessage(),
@@ -148,18 +175,121 @@ public class SignUp extends AppCompatActivity {
         });
     }
 
+    @Override
+    public void onRequestPermissionsResult(
+            int requestCode,
+            @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
+
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == LOCATION_REQUEST_CODE) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                getUserLocation();
+            } else {
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+
+    private void showLocationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Location Permission")
+                .setMessage("Do you give this app permission to access your location?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    Toast.makeText(this, "Location Enabled", Toast.LENGTH_SHORT).show();
+                    requestLocationPermission();
+                })
+                .setNegativeButton("No", (dialog, which) ->
+                        Toast.makeText(this, "Location Disabled", Toast.LENGTH_SHORT).show())
+                .show();
+    }
+
+    private void requestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_REQUEST_CODE
+            );
+        } else {
+            getUserLocation();
+        }
+    }
+
+    private void getUserLocation() {
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) return;
+
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+
+                    if (location != null) {
+                        double lat = location.getLatitude();
+                        double lng = location.getLongitude();
+
+                        userAddress = getAddressFromLocation(lat, lng);
+
+                        saveLocationToFirestore(userAddress, lat, lng);
+
+                        Log.d("LOCATION", userAddress);
+                    } else {
+                        Toast.makeText(this, "Unable to get location", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+
+    private String getAddressFromLocation(double lat, double lng) {
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
+            if (addresses != null && !addresses.isEmpty()) {
+                Address address = addresses.get(0);
+                return address.getLocality() + ", " + address.getAdminArea();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "Unknown location";
+    }
+
     private void saveUserToFirestore(String username, String email, String password) {
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         Map<String, Object> user = new HashMap<>();
         user.put("username", username);
         user.put("email", email);
-        user.put("Password", password);
         user.put("createdAt", System.currentTimeMillis());
+        user.put("Location", userAddress);
 
         db.collection("users")
                 .document(uid)
                 .set(user);
     }
+
+    private void saveLocationToFirestore(String address, double lat, double lng) {
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("location", address);
+        data.put("lat", lat);
+        data.put("lng", lng);
+        data.put("locationUpdatedAt", System.currentTimeMillis());
+
+        db.collection("users")
+                .document(user.getUid())
+                .update(data);
+    }
+
 
 }

@@ -14,7 +14,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsetsController;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -31,14 +35,20 @@ public class Home extends Fragment {
     private PostAdapter adapter;
     private FirebaseFirestore db;
 
+    private String userLocation = "";
+
+    private TextView txtLocation;
+
     public Home() {
         // Required empty public constructor
     }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         db = FirebaseFirestore.getInstance();
         posts = new ArrayList<>();
+
     }
 
     @Override
@@ -49,34 +59,28 @@ public class Home extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // RecyclerView
+        txtLocation = view.findViewById(R.id.txtLocation);
+
+        // ✅ CALL LOCATION FETCH HERE
+        getUserLocationFromDatabase();
+
         recyclerPosts = view.findViewById(R.id.recyclerPosts);
         recyclerPosts.setLayoutManager(new LinearLayoutManager(requireContext()));
 
-        // IMPORTANT: adapter uses the SAME list
         adapter = new PostAdapter(posts);
         recyclerPosts.setAdapter(adapter);
 
-        // Firestore listener
         db.collection("posts")
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .addSnapshotListener((value, error) -> {
 
-                    if (error != null) {
-                        Log.e("FIRESTORE", "Listen failed", error);
-                        return;
-                    }
-
-                    if (value == null || value.isEmpty()) {
-                        Log.d("FIRESTORE", "No posts found");
-                        return;
-                    }
+                    if (error != null || value == null) return;
 
                     posts.clear();
 
                     for (QueryDocumentSnapshot doc : value) {
                         String username = doc.getString("Username");
-                        String title  = doc.getString("title");
+                        String title = doc.getString("title");
                         String content = doc.getString("content");
 
                         Long time = doc.getLong("timestamp");
@@ -102,5 +106,29 @@ public class Home extends Fragment {
         if (millis == 0) return "";
         SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy • hh:mm a", Locale.getDefault());
         return sdf.format(new Date(millis));
+    }
+
+    private void getUserLocationFromDatabase() {
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        db.collection("users")
+                .document(user.getUid())
+                .get()
+                .addOnSuccessListener(document -> {
+
+                    if (!isAdded() || document == null || !document.exists()) return;
+
+                    userLocation = document.getString("location");
+
+                    if (userLocation != null && !userLocation.isEmpty()) {
+                        txtLocation.setText(userLocation);
+                    } else {
+                        txtLocation.setText("Location not set");
+                    }
+                })
+                .addOnFailureListener(e ->
+                        Log.e("FIRESTORE", "Failed to get location", e));
     }
 }

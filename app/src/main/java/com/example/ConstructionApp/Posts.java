@@ -102,9 +102,7 @@ public class Posts extends Fragment {
                 .addOnSuccessListener(doc -> {
 
                     if (!doc.exists()) return;
-
                     String username = doc.getString("username");
-
                     Map<String, Object> post = new HashMap<>();
                     post.put("Username", username);
                     post.put("content", txtcontent.getText().toString().trim());

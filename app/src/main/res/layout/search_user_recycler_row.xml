@@ -1,42 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_margin="10dp"
+    android:layout_height="56dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="12dp"
+    android:background="@color/bg_color">
 
-    android:background="@drawable/bg_light_gray_rounded"
-    android:backgroundTint="@color/card_color"
-    android:elevation="2dp">
-
+    <!-- Profile Picture -->
     <include
         layout="@layout/profile_pic_view"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_gravity="center"
-        android:layout_margin="10dp" />
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="12dp" />
 
+    <!-- User Info -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:layout_weight="1"
         android:orientation="vertical">
 
         <TextView
             android:id="@+id/user_name_text"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="User name"
+            android:layout_height="20dp"
+            android:text="Earnest Reyes"
             android:textColor="@color/text_primary"
-            android:textSize="18sp"
+            android:textSize="14sp"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/phone_text"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="18dp"
             android:text="+000000000000"
-            android:textColor="@color/text_primary" />
-
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
     </LinearLayout>
+
+    <!-- Remove (X) Button -->
+    <ImageButton
+        android:id="@+id/remove_btn"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_close"
+        app:tint="@color/icon_like" />
 
 </LinearLayout>

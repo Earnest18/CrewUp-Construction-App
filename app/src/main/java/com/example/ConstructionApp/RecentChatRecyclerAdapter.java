@@ -53,8 +53,6 @@ public class RecentChatRecyclerAdapter
 
                     otherUserModel.setUserId(snapshot.getId());
 
-
-
                     holder.usernameText.setText(otherUserModel.getUsername());
 
                     boolean lastMessageSentByMe =

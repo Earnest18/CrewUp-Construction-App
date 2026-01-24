@@ -7,50 +7,19 @@ public class UserModel {
     private String email;
     private String location;
 
-    private Double lat;
-    private Double lng;
-
-    private Long createdAt;
-    private Long locationUpdatedAt;
-
-    // REQUIRED empty constructor for Firestore
     public UserModel() {
+        // Required empty constructor
     }
 
-    // Getters
-    public String getUserId() {
-        return userId;
-    }
+    // GETTERS
+    public String getUserId() { return userId; }
+    public String getUsername() { return username; }
+    public String getEmail() { return email; }
+    public String getLocation() { return location; }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getLocation() {
-        return location;
-    }
-
-    public Double getLat() {
-        return lat;
-    }
-
-    public Double getLng() {
-        return lng;
-    }
-
-    public Long getCreatedAt() {
-        return createdAt;
-    }
-
-    public Long getLocationUpdatedAt() {
-        return locationUpdatedAt;
-    }
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
+    // SETTERS
+    public void setUserId(String userId) { this.userId = userId; }
+    public void setUsername(String username) { this.username = username; }
+    public void setEmail(String email) { this.email = email; }
+    public void setLocation(String location) { this.location = location; }
 }

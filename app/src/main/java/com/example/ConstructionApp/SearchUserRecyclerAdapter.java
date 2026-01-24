@@ -4,7 +4,6 @@ import static com.example.ConstructionApp.FirebaseUtil.currentUserId;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,10 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
-import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.FirebaseFirestore;
-
-import java.util.HashMap;
+import com.google.firebase.storage.StorageReference;
 
 public class SearchUserRecyclerAdapter
         extends FirestoreRecyclerAdapter<UserModel, SearchUserRecyclerAdapter.UserModelViewHolder> {
@@ -43,38 +39,56 @@ public class SearchUserRecyclerAdapter
 
         String userId = getSnapshots().getSnapshot(position).getId();
 
-        // Username (null-safe)
-        if (model.getUsername() != null) {
-            holder.usernameText.setText(model.getUsername());
-        } else {
-            holder.usernameText.setText("Unknown user");
+        /* ---------- USERNAME ---------- */
+        String username = model.getUsername();
+        if (username == null || username.trim().isEmpty()) {
+            username = "Unknown user";
         }
 
-        // Mark current user
         if (userId.equals(currentUserId())) {
-            holder.usernameText.setText(holder.usernameText.getText() + " (Me)");
+            username += " (Me)";
         }
 
-        // Optional: show email or location instead of phone
-        if (model.getEmail() != null) {
-            holder.subText.setText(model.getEmail());
-        } else if (model.getLocation() != null) {
-            holder.subText.setText(model.getLocation());
+        holder.usernameText.setText(username);
+
+        /* ---------- SUBTEXT (EMAIL / LOCATION) ---------- */
+        String email = model.getEmail();
+        String location = model.getLocation();
+
+        if (email != null && !email.trim().isEmpty()) {
+            holder.subText.setText(email);
+            holder.subText.setVisibility(View.VISIBLE);
+        } else if (location != null && !location.trim().isEmpty()) {
+            holder.subText.setText(location);
+            holder.subText.setVisibility(View.VISIBLE);
         } else {
             holder.subText.setText("");
+            holder.subText.setVisibility(View.GONE);
         }
 
-        // Profile picture (safe)
-        FirebaseUtil.getOtherProfilePicStorageRef(userId)
-                .getDownloadUrl()
-                .addOnSuccessListener(uri ->
-                        AndroidUtil.setProfilePic(context, uri, holder.profilePic)
-                )
-                .addOnFailureListener(e ->
-                        holder.profilePic.setImageResource(R.drawable.ic_profile_placeholder_foreground)
-                );
+        /* ---------- PROFILE PICTURE ---------- */
+        holder.profilePic.setImageResource(
+                R.drawable.ic_profile_placeholder_foreground
+        );
 
-        // Click → open chat
+        StorageReference picRef =
+                FirebaseUtil.getOtherProfilePicStorageRef(userId);
+
+        if (picRef != null) {
+            picRef.getDownloadUrl()
+                    .addOnSuccessListener(uri ->
+                            AndroidUtil.setProfilePic(
+                                    context, uri, holder.profilePic
+                            )
+                    )
+                    .addOnFailureListener(e ->
+                            holder.profilePic.setImageResource(
+                                    R.drawable.ic_profile_placeholder_foreground
+                            )
+                    );
+        }
+
+        /* ---------- CLICK ---------- */
         holder.itemView.setOnClickListener(v -> {
             FirebaseUtil.addToRecentSearch(model, userId);
 
@@ -105,10 +119,8 @@ public class SearchUserRecyclerAdapter
         public UserModelViewHolder(@NonNull View itemView) {
             super(itemView);
             usernameText = itemView.findViewById(R.id.user_name_text);
-            subText = itemView.findViewById(R.id.phone_text); // reuse TextView
+            subText = itemView.findViewById(R.id.phone_text);
             profilePic = itemView.findViewById(R.id.profile_pic_image_view);
         }
-
     }
 }
-

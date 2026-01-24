@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class FirebaseUtil {
 
@@ -37,8 +38,8 @@ public class FirebaseUtil {
         return allUserCollectionReference().document(uid);
     }
 
-
     public static DocumentReference getUserReference(String userId) {
+        if (userId == null || userId.isEmpty()) return null;
         return allUserCollectionReference().document(userId);
     }
 
@@ -49,13 +50,15 @@ public class FirebaseUtil {
     }
 
     public static DocumentReference getChatroomReference(String chatroomId) {
+        if (chatroomId == null || chatroomId.isEmpty()) return null;
         return FirebaseFirestore.getInstance()
                 .collection("chatrooms")
                 .document(chatroomId);
     }
 
     public static CollectionReference getChatroomMessageReference(String chatroomId) {
-        return getChatroomReference(chatroomId).collection("chats");
+        DocumentReference ref = getChatroomReference(chatroomId);
+        return ref != null ? ref.collection("chats") : null;
     }
 
     public static String getChatroomId(String userId1, String userId2) {
@@ -68,15 +71,15 @@ public class FirebaseUtil {
     public static DocumentReference getOtherUserFromChatroom(List<String> userIds) {
         if (userIds == null || userIds.size() < 2) return null;
 
-        if (userIds.get(0).equals(FirebaseUtil.currentUserId())) {
-            return allUserCollectionReference().document(userIds.get(1));
-        } else {
-            return allUserCollectionReference().document(userIds.get(0));
-        }
+        String currentUid = currentUserId();
+        if (currentUid == null) return null;
+
+        return userIds.get(0).equals(currentUid)
+                ? allUserCollectionReference().document(userIds.get(1))
+                : allUserCollectionReference().document(userIds.get(0));
     }
 
     /* ---------------- TIME ---------------- */
-
 
     public static String timestampToString(Timestamp timestamp) {
         if (timestamp == null) return "";
@@ -87,13 +90,18 @@ public class FirebaseUtil {
     /* ---------------- STORAGE ---------------- */
 
     public static StorageReference getCurrentProfilePicStorageRef() {
+        String uid = currentUserId();
+        if (uid == null) return null;
+
         return FirebaseStorage.getInstance()
                 .getReference()
                 .child("profile_pic")
-                .child(currentUserId());
+                .child(uid);
     }
 
     public static StorageReference getOtherProfilePicStorageRef(String otherUserId) {
+        if (otherUserId == null || otherUserId.isEmpty()) return null;
+
         return FirebaseStorage.getInstance()
                 .getReference()
                 .child("profile_pic")
@@ -106,25 +114,34 @@ public class FirebaseUtil {
         FirebaseAuth.getInstance().signOut();
     }
 
+    /* ---------------- RECENT SEARCH ---------------- */
+
     public static void addToRecentSearch(UserModel user, String userId) {
 
-        if (currentUserId() == null) return;
-        if (user == null) return;
-        if (userId == null || userId.isEmpty()) return;
+        String currentUid = currentUserId();
+        if (currentUid == null || user == null || userId == null) return;
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("userId", userId);
+        data.put("username", user.getUsername());
+        data.put("timestamp", Timestamp.now());
+
+        if (user.getEmail() != null) {
+            data.put("email", user.getEmail());
+        }
+
+        if (user.getLocation() != null) {
+            data.put("location", user.getLocation());
+        }
 
         FirebaseFirestore.getInstance()
                 .collection("users")
-                .document(currentUserId())
+                .document(currentUid)
                 .collection("recent_searches")
                 .document(userId)
-                .set(new HashMap<String, Object>() {{
-                    put("userId", userId);
-                    put("username", user.getUsername());
-                    put("timestamp", Timestamp.now());
-                }});
+                .set(data);
     }
 
 }
-
 
 

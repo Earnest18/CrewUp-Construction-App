@@ -20,5 +20,6 @@
     <color name="icon_like">#FF6B6B</color>
     <color name="icon_comment">#66BB6A</color>
     <color name="icon_share">#7986CB</color>
+    <color name="detail_card">#000000</color>
 
 </resources>

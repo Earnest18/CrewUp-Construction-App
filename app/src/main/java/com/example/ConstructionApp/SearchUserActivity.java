@@ -1,133 +1,67 @@
 package com.example.ConstructionApp;
 
+import android.os.Bundle;
+
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
-import android.widget.EditText;
-import android.widget.ImageButton;
-
-import com.example.ConstructionApp.SearchUserRecyclerAdapter;
-import com.example.ConstructionApp.UserModel;
-import com.example.ConstructionApp.FirebaseUtil;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
-
 
 public class SearchUserActivity extends AppCompatActivity {
 
-    EditText searchInput;
-    ImageButton searchButton;
-    ImageButton backButton;
-    RecyclerView recyclerView;
-
-    SearchUserRecyclerAdapter adapter;
+    private RecyclerView recyclerView;
+    private SearchUserRecyclerAdapter adapter;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_user);
 
-        searchInput = findViewById(R.id.seach_username_input);
-        searchButton = findViewById(R.id.search_user_btn);
-        backButton = findViewById(R.id.back_btn);
         recyclerView = findViewById(R.id.search_user_recycler_view);
-
-        searchInput.requestFocus();
-
-
-        backButton.setOnClickListener(v -> {
-            onBackPressed();
-        });
-
-        searchButton.setOnClickListener(v -> {
-            String searchTerm = searchInput.getText().toString();
-            if(searchTerm.isEmpty() || searchTerm.length()<3){
-                searchInput.setError("Invalid Username");
-                return;
-            }
-            setupSearchRecyclerView(searchTerm);
-        });
-
-        searchInput.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                String searchTerm = s.toString().trim().toLowerCase();
-
-                if (searchTerm.isEmpty()) {
-                    setupRecentSearchRecyclerView();
-                } else {
-                    setupSearchRecyclerView(searchTerm);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {}
-        });
-        setupRecentSearchRecyclerView();
-    }
-
-    void setupSearchRecyclerView(String searchTerm){
-
-        Query query = FirebaseUtil.allUserCollectionReference()
-                .whereGreaterThanOrEqualTo("username",searchTerm)
-                .whereLessThanOrEqualTo("username",searchTerm+'\uf8ff');
-
-        FirestoreRecyclerOptions<UserModel> options = new FirestoreRecyclerOptions.Builder<UserModel>()
-                .setQuery(query,UserModel.class).build();
-
-        adapter = new SearchUserRecyclerAdapter(options,getApplicationContext());
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(adapter);
-        adapter.startListening();
 
-    }
-    void setupRecentSearchRecyclerView() {
+        Query query = FirebaseFirestore.getInstance()
+                .collection("users");
 
-        Query query = FirebaseUtil.currentUserDetails()
-                .collection("recent_searches")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .limit(10);
-
+        // ✅ CUSTOM SNAPSHOT PARSER (NO toObject())
         FirestoreRecyclerOptions<UserModel> options =
                 new FirestoreRecyclerOptions.Builder<UserModel>()
-                        .setQuery(query, UserModel.class)
+                        .setQuery(query, snapshot -> {
+
+                            UserModel user = new UserModel();
+                            user.setUserId(snapshot.getId());
+                            user.setUsername(snapshot.getString("username"));
+                            user.setLocation(snapshot.getString("location"));
+
+                            Object emailObj = snapshot.get("email");
+                            if (emailObj instanceof String) {
+                                user.setEmail((String) emailObj);
+                            }
+
+                            return user;
+                        })
                         .build();
 
-        adapter = new SearchUserRecyclerAdapter(options, getApplicationContext());
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new SearchUserRecyclerAdapter(options, this);
         recyclerView.setAdapter(adapter);
-        adapter.startListening();
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        if(adapter!=null)
-            adapter.startListening();
+        adapter.startListening();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if(adapter!=null)
-            adapter.stopListening();
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if(adapter!=null)
-            adapter.startListening();
+        adapter.stopListening();
     }
 }
-
 
 
 

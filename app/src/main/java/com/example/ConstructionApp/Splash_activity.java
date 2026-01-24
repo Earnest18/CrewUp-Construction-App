@@ -22,7 +22,6 @@ public class Splash_activity extends AppCompatActivity {
         Animation logoAnim = AnimationUtils.loadAnimation(this, R.anim.fade_scale);
         logo.startAnimation(logoAnim);
 
-        // Optional tagline animation
         TextView tagline = findViewById(R.id.tagline);
         if (tagline != null) {
             Animation textAnim = AnimationUtils.loadAnimation(this, R.anim.fade_in_delayed);

@@ -3,9 +3,11 @@ package com.example.ConstructionApp;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -17,12 +19,20 @@ public class Splash_activity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
 
         ImageView logo = findViewById(R.id.logo);
-        Animation animation = AnimationUtils.loadAnimation(this, R.anim.fade_scale);
-        logo.startAnimation(animation);
+        Animation logoAnim = AnimationUtils.loadAnimation(this, R.anim.fade_scale);
+        logo.startAnimation(logoAnim);
 
-        new Handler().postDelayed(() -> {
+        // Optional tagline animation
+        TextView tagline = findViewById(R.id.tagline);
+        if (tagline != null) {
+            Animation textAnim = AnimationUtils.loadAnimation(this, R.anim.fade_in_delayed);
+            tagline.startAnimation(textAnim);
+        }
+
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
             startActivity(new Intent(Splash_activity.this, GetStartedActivity.class));
             finish();
-        }, 800);
+        }, 1600);
     }
 }
+

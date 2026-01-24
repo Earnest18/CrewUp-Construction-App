@@ -33,18 +33,17 @@ public class ChatRecyclerAdapter
             @NonNull ChatMessageModel model
     ) {
 
-        // 🔄 RESET recycled views (CRITICAL)
         holder.leftChatLayout.setVisibility(View.GONE);
         holder.rightChatLayout.setVisibility(View.GONE);
 
         String senderId = model.getSenderId();
 
         if (senderId != null && senderId.equals(FirebaseUtil.currentUserId())) {
-            // 👉 Message sent by ME
+
             holder.rightChatLayout.setVisibility(View.VISIBLE);
             holder.rightChatTextview.setText(model.getMessage());
         } else {
-            // 👉 Message sent by OTHER USER
+
             holder.leftChatLayout.setVisibility(View.VISIBLE);
             holder.leftChatTextview.setText(model.getMessage());
         }

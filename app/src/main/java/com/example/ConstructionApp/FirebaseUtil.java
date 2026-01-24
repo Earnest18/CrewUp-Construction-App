@@ -116,6 +116,8 @@ public class FirebaseUtil {
 
     /* ---------------- RECENT SEARCH ---------------- */
 
+    // 🔹 RECENT SEARCH
+
     public static void addToRecentSearch(UserModel user, String userId) {
 
         String currentUid = currentUserId();
@@ -142,6 +144,35 @@ public class FirebaseUtil {
                 .set(data);
     }
 
+    public static void removeFromRecentSearch(String targetUserId) {
+
+        String currentUid = currentUserId();
+        if (currentUid == null || targetUserId == null) return;
+
+        FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(currentUid)
+                .collection("recent_searches")
+                .document(targetUserId)
+                .delete();
+    }
+
+    public static void clearAllRecentSearches() {
+
+        String uid = currentUserId();
+        if (uid == null) return;
+
+        FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(uid)
+                .collection("recent_searches")
+                .get()
+                .addOnSuccessListener(query -> {
+                    for (var doc : query.getDocuments()) {
+                        doc.getReference().delete();
+                    }
+                });
+    }
 }
 
 

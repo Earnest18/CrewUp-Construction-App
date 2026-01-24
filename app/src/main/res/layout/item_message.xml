@@ -24,7 +24,7 @@
             android:id="@+id/txtName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Earnest Reyes"
+            android:text="Unknown user"
             android:textColor="@color/text_primary"
             android:textSize="16sp"
             android:textStyle="bold" />
@@ -33,7 +33,6 @@
             android:id="@+id/txtLastMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hey, how are you?"
             android:textColor="@color/text_secondary"
             android:textSize="14sp" />
     </LinearLayout>

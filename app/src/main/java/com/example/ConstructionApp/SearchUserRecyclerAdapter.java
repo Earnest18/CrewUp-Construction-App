@@ -1,38 +1,39 @@
 package com.example.ConstructionApp;
 
-import static com.example.ConstructionApp.FirebaseUtil.currentUserId;
-
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.firebase.storage.StorageReference;
 
 public class SearchUserRecyclerAdapter
-        extends FirestoreRecyclerAdapter<UserModel, SearchUserRecyclerAdapter.UserModelViewHolder> {
+        extends FirestoreRecyclerAdapter<UserModel, SearchUserRecyclerAdapter.UserViewHolder> {
 
     private final Context context;
+    private final boolean isRecent;
 
     public SearchUserRecyclerAdapter(
             @NonNull FirestoreRecyclerOptions<UserModel> options,
-            Context context
+            Context context,
+            boolean isRecent
     ) {
         super(options);
         this.context = context;
+        this.isRecent = isRecent;
     }
 
     @Override
     protected void onBindViewHolder(
-            @NonNull UserModelViewHolder holder,
+            @NonNull UserViewHolder holder,
             int position,
             @NonNull UserModel model
     ) {
@@ -44,14 +45,9 @@ public class SearchUserRecyclerAdapter
         if (username == null || username.trim().isEmpty()) {
             username = "Unknown user";
         }
+        holder.username.setText(username);
 
-        if (userId.equals(currentUserId())) {
-            username += " (Me)";
-        }
-
-        holder.usernameText.setText(username);
-
-        /* ---------- SUBTEXT (EMAIL / LOCATION) ---------- */
+        /* ---------- EMAIL / LOCATION ---------- */
         String email = model.getEmail();
         String location = model.getLocation();
 
@@ -62,7 +58,6 @@ public class SearchUserRecyclerAdapter
             holder.subText.setText(location);
             holder.subText.setVisibility(View.VISIBLE);
         } else {
-            holder.subText.setText("");
             holder.subText.setVisibility(View.GONE);
         }
 
@@ -88,7 +83,7 @@ public class SearchUserRecyclerAdapter
                     );
         }
 
-        /* ---------- CLICK ---------- */
+        /* ---------- CLICK → OPEN CHAT + SAVE RECENT ---------- */
         holder.itemView.setOnClickListener(v -> {
             FirebaseUtil.addToRecentSearch(model, userId);
 
@@ -97,30 +92,42 @@ public class SearchUserRecyclerAdapter
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(intent);
         });
+
+        /* ---------- REMOVE BUTTON (ONLY FOR RECENT) ---------- */
+        if (isRecent) {
+            holder.removeBtn.setVisibility(View.VISIBLE);
+            holder.removeBtn.setOnClickListener(v ->
+                    FirebaseUtil.removeFromRecentSearch(userId)
+            );
+        } else {
+            holder.removeBtn.setVisibility(View.GONE);
+        }
     }
 
     @NonNull
     @Override
-    public UserModelViewHolder onCreateViewHolder(
+    public UserViewHolder onCreateViewHolder(
             @NonNull ViewGroup parent,
             int viewType
     ) {
         View view = LayoutInflater.from(context)
                 .inflate(R.layout.search_user_recycler_row, parent, false);
-        return new UserModelViewHolder(view);
+        return new UserViewHolder(view);
     }
 
-    static class UserModelViewHolder extends RecyclerView.ViewHolder {
+    static class UserViewHolder extends androidx.recyclerview.widget.RecyclerView.ViewHolder {
 
-        TextView usernameText;
-        TextView subText;
+        TextView username, subText;
         ImageView profilePic;
+        ImageButton removeBtn;
 
-        public UserModelViewHolder(@NonNull View itemView) {
+        UserViewHolder(@NonNull View itemView) {
             super(itemView);
-            usernameText = itemView.findViewById(R.id.user_name_text);
+            username = itemView.findViewById(R.id.user_name_text);
             subText = itemView.findViewById(R.id.phone_text);
             profilePic = itemView.findViewById(R.id.profile_pic_image_view);
+            removeBtn = itemView.findViewById(R.id.remove_btn);
         }
     }
 }
+

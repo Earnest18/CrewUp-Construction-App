@@ -5,6 +5,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
@@ -49,6 +51,26 @@ public class SearchUserActivity extends AppCompatActivity {
             }
             setupSearchRecyclerView(searchTerm);
         });
+
+        searchInput.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                String searchTerm = s.toString().trim().toLowerCase();
+
+                if (searchTerm.isEmpty()) {
+                    setupRecentSearchRecyclerView();
+                } else {
+                    setupSearchRecyclerView(searchTerm);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+        setupRecentSearchRecyclerView();
     }
 
     void setupSearchRecyclerView(String searchTerm){
@@ -65,6 +87,23 @@ public class SearchUserActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
         adapter.startListening();
 
+    }
+    void setupRecentSearchRecyclerView() {
+
+        Query query = FirebaseUtil.currentUserDetails()
+                .collection("recent_searches")
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .limit(10);
+
+        FirestoreRecyclerOptions<UserModel> options =
+                new FirestoreRecyclerOptions.Builder<UserModel>()
+                        .setQuery(query, UserModel.class)
+                        .build();
+
+        adapter = new SearchUserRecyclerAdapter(options, getApplicationContext());
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(adapter);
+        adapter.startListening();
     }
 
     @Override

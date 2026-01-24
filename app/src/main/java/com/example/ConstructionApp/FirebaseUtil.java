@@ -9,6 +9,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -31,8 +32,11 @@ public class FirebaseUtil {
     }
 
     public static DocumentReference currentUserDetails() {
-        return allUserCollectionReference().document(currentUserId());
+        String uid = currentUserId();
+        if (uid == null) return null;
+        return allUserCollectionReference().document(uid);
     }
+
 
     public static DocumentReference getUserReference(String userId) {
         return allUserCollectionReference().document(userId);
@@ -101,6 +105,25 @@ public class FirebaseUtil {
     public static void logout() {
         FirebaseAuth.getInstance().signOut();
     }
+
+    public static void addToRecentSearch(UserModel user, String userId) {
+
+        if (currentUserId() == null) return;
+        if (user == null) return;
+        if (userId == null || userId.isEmpty()) return;
+
+        FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(currentUserId())
+                .collection("recent_searches")
+                .document(userId)
+                .set(new HashMap<String, Object>() {{
+                    put("userId", userId);
+                    put("username", user.getUsername());
+                    put("timestamp", Timestamp.now());
+                }});
+    }
+
 }
 
 

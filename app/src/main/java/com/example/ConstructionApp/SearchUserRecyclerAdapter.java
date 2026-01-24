@@ -1,5 +1,7 @@
 package com.example.ConstructionApp;
 
+import static com.example.ConstructionApp.FirebaseUtil.currentUserId;
+
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -14,6 +16,10 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.HashMap;
 
 public class SearchUserRecyclerAdapter
         extends FirestoreRecyclerAdapter<UserModel, SearchUserRecyclerAdapter.UserModelViewHolder> {
@@ -35,7 +41,6 @@ public class SearchUserRecyclerAdapter
             @NonNull UserModel model
     ) {
 
-        // 🔑 Get Firestore document ID (userId)
         String userId = getSnapshots().getSnapshot(position).getId();
 
         // Username (null-safe)
@@ -46,7 +51,7 @@ public class SearchUserRecyclerAdapter
         }
 
         // Mark current user
-        if (userId.equals(FirebaseUtil.currentUserId())) {
+        if (userId.equals(currentUserId())) {
             holder.usernameText.setText(holder.usernameText.getText() + " (Me)");
         }
 
@@ -71,6 +76,8 @@ public class SearchUserRecyclerAdapter
 
         // Click → open chat
         holder.itemView.setOnClickListener(v -> {
+            FirebaseUtil.addToRecentSearch(model, userId);
+
             Intent intent = new Intent(context, ChatActivity.class);
             AndroidUtil.passUserModelAsIntent(intent, model, userId);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -101,6 +108,7 @@ public class SearchUserRecyclerAdapter
             subText = itemView.findViewById(R.id.phone_text); // reuse TextView
             profilePic = itemView.findViewById(R.id.profile_pic_image_view);
         }
+
     }
 }
 

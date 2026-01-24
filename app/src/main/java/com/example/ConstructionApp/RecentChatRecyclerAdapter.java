@@ -1,5 +1,6 @@
 package com.example.ConstructionApp;
 
+import android.accounts.AccountManagerFuture;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.tasks.Task;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 
@@ -35,29 +37,30 @@ public class RecentChatRecyclerAdapter
             @NonNull ChatroomModel model
     ) {
 
-        // 🔐 Get the other user reference safely
+        // 🔒 Always reset click (RecyclerView reuse)
+        holder.itemView.setOnClickListener(null);
+
         if (FirebaseUtil.getOtherUserFromChatroom(model.getUserIds()) == null) {
             return;
         }
 
         FirebaseUtil.getOtherUserFromChatroom(model.getUserIds())
                 .get()
-                .addOnCompleteListener(task -> {
+                .addOnSuccessListener(snapshot -> {
 
-                    if (!task.isSuccessful() || task.getResult() == null) return;
-
-                    UserModel otherUserModel =
-                            task.getResult().toObject(UserModel.class);
-
+                    UserModel otherUserModel = snapshot.toObject(UserModel.class);
                     if (otherUserModel == null) return;
 
-                    // ✅ Safe sender check
-                    boolean lastMessageSentByMe =
-                            model.getLastMessageSenderId() != null
-                                    && model.getLastMessageSenderId()
-                                    .equals(FirebaseUtil.currentUserId());
+                    otherUserModel.setUserId(snapshot.getId());
+
+
 
                     holder.usernameText.setText(otherUserModel.getUsername());
+
+                    boolean lastMessageSentByMe =
+                            model.getLastMessageSenderId() != null &&
+                                    model.getLastMessageSenderId()
+                                            .equals(FirebaseUtil.currentUserId());
 
                     holder.lastMessageText.setText(
                             lastMessageSentByMe
@@ -65,27 +68,26 @@ public class RecentChatRecyclerAdapter
                                     : model.getLastMessage()
                     );
 
-                    // ✅ Timestamp handled via FirebaseUtil
                     holder.lastMessageTime.setText(
                             FirebaseUtil.timestampToString(
                                     model.getLastMessageTimestamp()
                             )
                     );
 
-                    // ✅ Load profile picture safely
-                    FirebaseUtil.getOtherProfilePicStorageRef(
-                                    otherUserModel.getUserId()
-                            )
-                            .getDownloadUrl()
-                            .addOnSuccessListener(uri ->
-                                    AndroidUtil.setProfilePic(
-                                            context,
-                                            uri,
-                                            holder.profilePic
-                                    )
-                            );
+                    String otherUserId = otherUserModel.getUserId();
 
-                    // ✅ Open chat
+                    if (otherUserId != null && !otherUserId.isEmpty()) {
+                        FirebaseUtil.getOtherProfilePicStorageRef(otherUserId)
+                                .getDownloadUrl()
+                                .addOnSuccessListener(uri ->
+                                        AndroidUtil.setProfilePic(
+                                                context,
+                                                uri,
+                                                holder.profilePic
+                                        )
+                                );
+                    }
+
                     holder.itemView.setOnClickListener(v -> {
                         Intent intent = new Intent(context, ChatActivity.class);
 
@@ -94,13 +96,11 @@ public class RecentChatRecyclerAdapter
                                 otherUserModel,
                                 otherUserModel.getUserId()
                         );
-
                         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                         context.startActivity(intent);
                     });
                 });
     }
-
 
     @NonNull
     @Override

@@ -1,20 +1,20 @@
 package com.example.ConstructionApp;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.net.Uri;
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.Query;
 
 import java.util.Arrays;
@@ -39,19 +39,19 @@ public class ChatActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
 
-        //Get userId from intent
+        // 🔑 Get userId from Intent
         otherUserId = getIntent().getStringExtra("userId");
 
-        if (otherUserId == null) {
+        Log.d("CHAT_DEBUG", "ChatActivity started with userId=" + otherUserId);
+
+        // 🚨 HARD STOP — prevents ALL Firestore crashes
+        if (otherUserId == null || otherUserId.isEmpty()) {
+            Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        chatroomId = FirebaseUtil.getChatroomId(
-                FirebaseUtil.currentUserId(),
-                otherUserId
-        );
-
+        // 🔧 Initialize views
         messageInput = findViewById(R.id.chat_message_input);
         sendMessageBtn = findViewById(R.id.message_send_btn);
         backBtn = findViewById(R.id.back_btn);
@@ -59,12 +59,20 @@ public class ChatActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.chat_recycler_view);
         profilePic = findViewById(R.id.profile_pic_image_view);
 
-        backBtn.setOnClickListener(v -> onBackPressed());
+        backBtn.setOnClickListener(v -> {
+            Intent in = new Intent(this, Home.class);
+            startActivity(in);
+        });
+
+        // 🔗 Chatroom ID
+        chatroomId = FirebaseUtil.getChatroomId(
+                FirebaseUtil.currentUserId(),
+                otherUserId
+        );
 
         loadOtherUser();
         setupChatRecyclerView();
         getOrCreateChatroomModel();
-
 
         sendMessageBtn.setOnClickListener(v -> {
             String message = messageInput.getText().toString().trim();
@@ -74,9 +82,17 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
+    // 🔍 Load other user's data
     private void loadOtherUser() {
-        FirebaseUtil.getUserReference(otherUserId).get()
+        FirebaseUtil.getUserReference(otherUserId)
+                .get()
                 .addOnSuccessListener(snapshot -> {
+                    if (!snapshot.exists()) {
+                        Toast.makeText(this, "User does not exist", Toast.LENGTH_SHORT).show();
+                        finish();
+                        return;
+                    }
+
                     otherUser = snapshot.toObject(UserModel.class);
                     if (otherUser == null) return;
 
@@ -90,6 +106,7 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
 
+    // 💬 Messages list
     private void setupChatRecyclerView() {
         Query query = FirebaseUtil.getChatroomMessageReference(chatroomId)
                 .orderBy("timestamp", Query.Direction.DESCENDING);
@@ -109,14 +126,14 @@ public class ChatActivity extends AppCompatActivity {
         adapter.startListening();
     }
 
+    // ✉️ Send message
     private void sendMessageToUser(String message) {
+        Timestamp now = Timestamp.now();
 
-        if (message.trim().isEmpty()) return;
-
-        FirebaseUtil.getChatroomReference(chatroomId).get()
+        FirebaseUtil.getChatroomReference(chatroomId)
+                .get()
                 .addOnSuccessListener(snapshot -> {
 
-                    Timestamp now = Timestamp.now();
                     ChatroomModel model = snapshot.toObject(ChatroomModel.class);
 
                     if (model == null) {
@@ -156,13 +173,11 @@ public class ChatActivity extends AppCompatActivity {
                 });
     }
 
-
-
-
+    // 🏗 Create chatroom if missing
     private void getOrCreateChatroomModel() {
-        FirebaseUtil.getChatroomReference(chatroomId).get()
+        FirebaseUtil.getChatroomReference(chatroomId)
+                .get()
                 .addOnSuccessListener(snapshot -> {
-
                     chatroomModel = snapshot.toObject(ChatroomModel.class);
 
                     if (chatroomModel == null) {
@@ -172,9 +187,9 @@ public class ChatActivity extends AppCompatActivity {
                                         FirebaseUtil.currentUserId(),
                                         otherUserId
                                 ),
-                                "",              // lastMessage
-                                "",                         // senderId
-                                Timestamp.now()             // timestamp
+                                "",
+                                "",
+                                Timestamp.now()
                         );
 
                         FirebaseUtil.getChatroomReference(chatroomId)
@@ -194,6 +209,4 @@ public class ChatActivity extends AppCompatActivity {
         super.onStop();
         if (adapter != null) adapter.stopListening();
     }
-
-
 }

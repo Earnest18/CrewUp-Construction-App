@@ -34,7 +34,6 @@ public class FirebaseUtil {
         return allUserCollectionReference().document(currentUserId());
     }
 
-    // ✅ MISSING METHOD (FIX)
     public static DocumentReference getUserReference(String userId) {
         return allUserCollectionReference().document(userId);
     }
@@ -65,16 +64,16 @@ public class FirebaseUtil {
     public static DocumentReference getOtherUserFromChatroom(List<String> userIds) {
         if (userIds == null || userIds.size() < 2) return null;
 
-        if (userIds.get(0).equals(currentUserId())) {
-            return getUserReference(userIds.get(1));
+        if (userIds.get(0).equals(FirebaseUtil.currentUserId())) {
+            return allUserCollectionReference().document(userIds.get(1));
         } else {
-            return getUserReference(userIds.get(0));
+            return allUserCollectionReference().document(userIds.get(0));
         }
     }
 
     /* ---------------- TIME ---------------- */
 
-    // ✅ FIXED FORMAT (mm = minutes)
+
     public static String timestampToString(Timestamp timestamp) {
         if (timestamp == null) return "";
         return new SimpleDateFormat("HH:mm", Locale.getDefault())

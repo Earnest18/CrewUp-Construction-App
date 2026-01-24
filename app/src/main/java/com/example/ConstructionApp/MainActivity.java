@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         txtNewsFeed = findViewById(R.id.txtNewsfeed);
         btnSearch = findViewById(R.id.btnSearch);
 
+
         btnSearch.setOnClickListener(v -> {
             Intent in = new Intent(MainActivity.this, SearchUserActivity.class);
             startActivity(in);
@@ -95,13 +96,12 @@ public class MainActivity extends AppCompatActivity {
             highlight(null);
         });
 
-/*
         navChat.setOnClickListener(v -> {
             loadFragment(new ChatFragment());
             highlight(navChat);
         });
 
- */
+
 
 
 

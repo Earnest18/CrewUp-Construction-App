@@ -49,4 +49,8 @@ public class UserModel {
     public Long getLocationUpdatedAt() {
         return locationUpdatedAt;
     }
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
 }

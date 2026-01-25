@@ -2,7 +2,6 @@ package com.example.ConstructionApp;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +16,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -32,7 +32,6 @@ public class ChatActivity extends AppCompatActivity {
 
     private String otherUserId;
     private UserModel otherUser;
-
     private String chatroomId;
     private ChatRecyclerAdapter adapter;
 
@@ -45,11 +44,13 @@ public class ChatActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // Edge-to-edge (required for IME)
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+
         setContentView(R.layout.activity_chat);
 
         otherUserId = getIntent().getStringExtra("userId");
-
-        Log.d("CHAT_DEBUG", "ChatActivity started with userId=" + otherUserId);
 
         if (otherUserId == null || otherUserId.isEmpty()) {
             Toast.makeText(this, "User not found", Toast.LENGTH_SHORT).show();
@@ -57,6 +58,7 @@ public class ChatActivity extends AppCompatActivity {
             return;
         }
 
+        // Views
         messageInput = findViewById(R.id.chat_message_input);
         sendMessageBtn = findViewById(R.id.message_send_btn);
         backBtn = findViewById(R.id.back_btn);
@@ -65,23 +67,57 @@ public class ChatActivity extends AppCompatActivity {
         profilePic = findViewById(R.id.profile_pic_image_view);
 
         View root = findViewById(R.id.main);
+        View bottomLayout = findViewById(R.id.bottom_layout);
 
+        // ✅ INSETS HANDLING (keyboard + system bars)
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            Insets systemBars =
-                    insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
+
+            boolean isKeyboardVisible =
+                    insets.isVisible(WindowInsetsCompat.Type.ime());
+
+            int keyboardHeight = isKeyboardVisible
+                    ? imeInsets.bottom - systemBars.bottom
+                    : 0;
+
+            keyboardHeight = Math.max(0, keyboardHeight);
+
+            // Status bar safe area
             v.setPadding(
-                    systemBars.left,
+                    v.getPaddingLeft(),
                     systemBars.top,
-                    systemBars.right,
+                    v.getPaddingRight(),
+                    v.getPaddingBottom()
+            );
+
+            // Move input above keyboard
+            bottomLayout.setTranslationY(-keyboardHeight);
+
+            // Gesture navigation safe area
+            bottomLayout.setPadding(
+                    bottomLayout.getPaddingLeft(),
+                    bottomLayout.getPaddingTop(),
+                    bottomLayout.getPaddingRight(),
                     systemBars.bottom
+            );
+
+            // Resize chat list
+            recyclerView.setPadding(
+                    recyclerView.getPaddingLeft(),
+                    recyclerView.getPaddingTop(),
+                    recyclerView.getPaddingRight(),
+                    keyboardHeight + systemBars.bottom
             );
 
             return insets;
         });
 
+        // 🔙 Back button
         backBtn.setOnClickListener(v -> finish());
 
+        // ✅ Chat setup (THIS WAS MISSING)
         chatroomId = FirebaseUtil.getChatroomId(
                 FirebaseUtil.currentUserId(),
                 otherUserId
@@ -91,6 +127,7 @@ public class ChatActivity extends AppCompatActivity {
         setupChatRecyclerView();
         getOrCreateChatroomModel();
 
+        // 📤 Send message
         sendMessageBtn.setOnClickListener(v -> {
             String message = messageInput.getText().toString().trim();
             if (!message.isEmpty()) {
@@ -99,38 +136,34 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-    /* ---------------- LOAD USER ---------------- */
+        /* ---------------- LOAD USER ---------------- */
 
-    private void loadOtherUser() {
-        FirebaseUtil.getUserReference(otherUserId)
-                .get()
-                .addOnSuccessListener(snapshot -> {
-                    if (!snapshot.exists()) {
-                        Toast.makeText(this, "User does not exist", Toast.LENGTH_SHORT).show();
-                        finish();
-                        return;
-                    }
+        private void loadOtherUser () {
+            FirebaseUtil.getUserReference(otherUserId)
+                    .get()
+                    .addOnSuccessListener(snapshot -> {
+                        if (!snapshot.exists()) {
+                            Toast.makeText(this, "User does not exist", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
 
-                    otherUser = snapshot.toObject(UserModel.class);
-                    if (otherUser == null) return;
+                        otherUser = snapshot.toObject(UserModel.class);
+                        if (otherUser == null) return;
 
-                    otherUser.setUserId(snapshot.getId());
-                    otherUsername.setText(otherUser.getUsername());
+                        otherUser.setUserId(snapshot.getId());
+                        otherUsername.setText(otherUser.getUsername());
 
-                    String url = snapshot.getString("profilePicUrl");
-                    if (url != null && !url.isEmpty()) {
-                        Glide.with(this)
-                                .load(url)
-                                .placeholder(R.drawable.ic_profile_placeholder_foreground)
-                                .circleCrop()
-                                .into(profilePic);
-                    } else {
-                        profilePic.setImageResource(
-                                R.drawable.ic_profile_placeholder_foreground
-                        );
-                    }
-                });
-    }
+                        String url = snapshot.getString("profilePicUrl");
+                        if (url != null && !url.isEmpty()) {
+                            Glide.with(this)
+                                    .load(url)
+                                    .circleCrop()
+                                    .into(profilePic);
+                        }
+                    });
+        }
+
 
     /* ---------------- CHAT LIST ---------------- */
 
@@ -217,38 +250,10 @@ public class ChatActivity extends AppCompatActivity {
                                 "",
                                 Timestamp.now()
                         );
-
                         FirebaseUtil.getChatroomReference(chatroomId)
                                 .set(chatroomModel);
                     }
                 });
-    }
-
-    /* ---------------- NOTIFICATION ---------------- */
-
-    public void notifications(String user, String message) {
-        NotificationManager manager =
-                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel =
-                    new NotificationChannel(
-                            "CrewUp",
-                            "CrewUp Notifications",
-                            NotificationManager.IMPORTANCE_DEFAULT
-                    );
-            manager.createNotificationChannel(channel);
-        }
-
-        NotificationCompat.Builder builder =
-                new NotificationCompat.Builder(this, "CrewUp")
-                        .setSmallIcon(R.drawable.crewup_logo)
-                        .setContentTitle(user)
-                        .setContentText(message)
-                        .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-
-        manager.notify(1, builder.build());
     }
 
     /* ---------------- LIFECYCLE ---------------- */
@@ -265,4 +270,3 @@ public class ChatActivity extends AppCompatActivity {
         if (adapter != null) adapter.stopListening();
     }
 }
-

@@ -3,10 +3,11 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/main"
     android:background="@color/bg_color"
+    android:fitsSystemWindows="true"
     tools:context=".ChatActivity">
 
     <!-- ================= TOOLBAR ================= -->
@@ -71,7 +72,7 @@
         app:layout_constraintBottom_toTopOf="@id/bottom_layout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:listitem="@layout/chat_message_row"/>
+        tools:listitem="@layout/chat_message_recycler_row"/>
 
     <!-- ================= MESSAGE INPUT ================= -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -95,6 +96,8 @@
             android:textColor="@color/on_primary"
             android:textColorHint="@color/text_secondary"
             android:maxLines="4"
+            android:gravity="top"
+            android:inputType="textMultiLine"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/message_send_btn"
             app:layout_constraintTop_toTopOf="parent"

@@ -52,6 +52,7 @@ public class SignUp extends AppCompatActivity {
 
     private FusedLocationProviderClient fusedLocationClient;
     private String userAddress = "";
+    String formattedName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,20 +63,19 @@ public class SignUp extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        getWindow().getInsetsController().setSystemBarsAppearance(
-                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
-                WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
-        );
+        View root = findViewById(R.id.main);
 
-        View main = findViewById(R.id.main);
-        ViewCompat.setOnApplyWindowInsetsListener(main, (v, insets) -> {
-            int topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top;
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets systemBars =
+                    insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
             v.setPadding(
-                    v.getPaddingLeft(),
-                    topInset,
-                    v.getPaddingRight(),
-                    v.getPaddingBottom()
+                    systemBars.left,
+                    systemBars.top,
+                    systemBars.right,
+                    systemBars.bottom
             );
+
             return insets;
         });
         mAuth = FirebaseAuth.getInstance();
@@ -101,7 +101,23 @@ public class SignUp extends AppCompatActivity {
 
         signin.setOnClickListener(view -> {
             progressBar.setVisibility(View.VISIBLE);
-            String user = username.getText().toString().trim();
+            // Capitalize first letter of first and second word
+            String text = username.getText().toString().trim();
+
+            if (!text.isEmpty()) {
+                String[] parts = text.split("\\s+");
+
+                for (int i = 0; i < parts.length && i < 2; i++) {
+                    if (parts[i].length() > 0) {
+                        parts[i] = parts[i].substring(0, 1).toUpperCase()
+                                + parts[i].substring(1).toLowerCase();
+                    }
+                }
+
+                formattedName = String.join(" ", parts);
+            }
+
+            String user = formattedName;
             String emailTxt = email.getText().toString().trim();
             String passTxt = password.getText().toString().trim();
             String confirmTxt = confirmpass.getText().toString().trim();
@@ -269,6 +285,7 @@ public class SignUp extends AppCompatActivity {
         user.put("email", email);
         user.put("createdAt", System.currentTimeMillis());
         user.put("location", userAddress);
+        user.put("username_lower", username.toLowerCase());
 
         db.collection("users")
                 .document(uid)

@@ -3,12 +3,16 @@ package com.example.ConstructionApp;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -34,9 +38,24 @@ public class SearchUserActivity extends AppCompatActivity {
         backBtn = findViewById(R.id.back_btn);
         clearAllBtn = findViewById(R.id.clear_all);
 
+        View root = findViewById(R.id.main);
+
+        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+            Insets systemBars =
+                    insets.getInsets(WindowInsetsCompat.Type.systemBars());
+
+            v.setPadding(
+                    systemBars.left,
+                    systemBars.top,
+                    systemBars.right,
+                    systemBars.bottom
+            );
+
+            return insets;
+        });
+
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // 🔹 SHOW RECENT SEARCHES BY DEFAULT
         loadRecentSearches();
 
         searchInput.addTextChangedListener(new TextWatcher() {
@@ -45,7 +64,6 @@ public class SearchUserActivity extends AppCompatActivity {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String text = s.toString().trim().toLowerCase();
-
                 if (text.isEmpty()) {
                     loadRecentSearches();
                 } else {
@@ -76,7 +94,7 @@ public class SearchUserActivity extends AppCompatActivity {
     private void loadSearchResults(String text) {
         Query query = FirebaseFirestore.getInstance()
                 .collection("users")
-                .orderBy("username")
+                .orderBy("username_lower")
                 .startAt(text)
                 .endAt(text + "\uf8ff");
 

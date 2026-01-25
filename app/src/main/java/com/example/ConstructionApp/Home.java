@@ -91,7 +91,6 @@ public class Home extends Fragment {
                             time = "Just now";
                         }
 
-                        // ---- if user already cached ----
                         if (profileCache.containsKey(userId)) {
 
                             Post post = new Post(
@@ -121,7 +120,6 @@ public class Home extends Fragment {
                                     String profilePicUrl =
                                             userSnap.getString("profilePicUrl");
 
-                                    // cache user data
                                     profileCache.put(userId, profilePicUrl);
                                     profileCache.put(userId + "_name", username);
 
@@ -140,7 +138,6 @@ public class Home extends Fragment {
                     }
                 });
     }
-
     private String formatTimestamp(long millis) {
         return new SimpleDateFormat(
                 "MMM dd, yyyy • hh:mm a",

@@ -8,7 +8,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg_color"
     android:fitsSystemWindows="true"
-    tools:context=".ChatActivity">
+    tools:context="clients.chat.ChatActivity">
 
     <!-- ================= TOOLBAR ================= -->
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -79,29 +79,33 @@
         android:id="@+id/bottom_layout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:background="@color/bg_color"
         android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent">
 
         <EditText
             android:id="@+id/chat_message_input"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:minHeight="48dp"
             android:background="@drawable/bg_light_gray_rounded"
+            android:gravity="top"
             android:hint="Write message here"
+            android:inputType="textMultiLine"
+            android:maxLines="4"
+            android:minHeight="48dp"
             android:padding="10dp"
             android:textColor="@color/on_primary"
             android:textColorHint="@color/text_secondary"
-            android:maxLines="4"
-            android:gravity="top"
-            android:inputType="textMultiLine"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/message_send_btn"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:layout_constraintVertical_bias="0.0" />
 
         <ImageButton
             android:id="@+id/message_send_btn"
@@ -109,10 +113,10 @@
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_send"
-            app:tint="@color/icon_like"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
+            app:tint="@color/icon_like" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -12,7 +12,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     <application
-        android:name=".MyApplication"
+        android:name="app.MyApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -21,38 +21,38 @@
         android:theme="@style/Theme.Fragments_Reyes">
 
         <activity
-            android:name=".ChatActivity"
+            android:name="clients.chat.ChatActivity"
             android:windowSoftInputMode="stateAlwaysHidden" />
         <activity
-            android:name=".SearchUserActivity"
+            android:name="clients.home.SearchUserActivity"
             android:exported="false"/>
 
         <activity
-            android:name=".ForgotPass"
+            android:name="auth.ForgotPass"
             android:exported="false"/>
 
         <activity
-            android:name=".SignUp"
+            android:name="auth.SignUp"
             android:exported="false"/>
 
         <activity
-            android:name=".Login"
+            android:name="auth.Login"
             android:exported="false"/>
 
         <activity
-            android:name=".GetStartedActivity"
+            android:name="auth.GetStartedActivity"
             android:exported="false"/>
 
         <activity
-            android:name=".MainActivity"
+            android:name="app.MainActivity"
             android:exported="false"/>
 
         <activity
-            android:name=".CreateAccount"
+            android:name="app.CreateAccount"
             android:exported="false"/>
 
         <activity
-            android:name=".Splash_activity"
+            android:name="app.Splash_activity"
             android:exported="true"
             android:theme="@style/Theme.Material3.DayNight.NoActionBar">
             <intent-filter>
@@ -63,7 +63,7 @@
 
         <!-- Firebase Cloud Messaging Service -->
         <service
-            android:name=".FCMNotificationService"
+            android:name="notifications.FCMNotificationService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>

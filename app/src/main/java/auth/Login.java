@@ -34,6 +34,10 @@ public class Login extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_login);
 
+        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
+            checkUserRole();
+        }
+
         mAuth = FirebaseAuth.getInstance();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

@@ -21,6 +21,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.HashMap;
@@ -32,6 +33,7 @@ import clients.home.SearchUserActivity;
 import clients.posts.Posts;
 import data.FirebaseUtil;
 import workers.chat.WorkersChat;
+import workers.home.NotificationsWorker;
 import workers.messages.Chat;
 import workers.profile.WorkerProfile;
 import workers.works.works;
@@ -41,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     // Bottom nav buttons
     ImageButton navHome, navBell, navAdd, navChat, navProfile;
     TextView txtNewsFeed;
-    ImageView btnSearch;
+    ImageView btnSearch, Notification;
     private FirebaseFirestore db;
 
     private String userLocation = "";
@@ -51,6 +53,14 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            startActivity(new Intent(this, auth.Login.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_main2);
         db = FirebaseFirestore.getInstance();
 
@@ -94,6 +104,12 @@ public class MainActivity extends AppCompatActivity {
         navProfile = findViewById(R.id.navProfile);
         txtNewsFeed = findViewById(R.id.txtNewsfeed);
         btnSearch = findViewById(R.id.btnSearch);
+        Notification = findViewById(R.id.btnBell);
+
+        Notification.setOnClickListener(v -> {
+            Intent in = new Intent(this, NotificationsWorker.class);
+            startActivity(in);
+        });
 
         btnSearch.setOnClickListener(v -> {
             Intent in = new Intent(MainActivity.this, SearchUserActivity.class);
@@ -194,11 +210,17 @@ public class MainActivity extends AppCompatActivity {
 
                     Map<String, Object> data = new HashMap<>();
                     data.put("userId", uid);
+                    data.put("role", "worker");
+                    data.put("fcmToken", token);
 
                     db.collection("workers")
-                            .document(user.getUid())
-                            .update(data);
+                            .document(uid)
+                            .set(data, SetOptions.merge())
+                            .addOnSuccessListener(unused ->
+                                    Log.d("FIRESTORE", "Worker data saved"))
+                            .addOnFailureListener(e ->
+                                    Log.e("FIRESTORE", "Worker save failed", e));
                 });
-    }
+}
 }
 

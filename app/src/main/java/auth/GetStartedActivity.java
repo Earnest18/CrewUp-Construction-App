@@ -23,11 +23,37 @@ public class GetStartedActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (FirebaseAuth.getInstance().getCurrentUser() != null) {
-            startActivity(new Intent(this, MainActivity.class));
-            finish(); // prevents going back to login
+
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        if (auth.getCurrentUser() != null) {
+            String uid = auth.getCurrentUser().getUid();
+
+            // 🔥 FAST ROLE CHECK
+            db.collection("workers")
+                    .document(uid)
+                    .get()
+                    .addOnSuccessListener(doc -> {
+                        if (doc.exists()) {
+                            //ORKER UI
+                            startActivity(new Intent(this, workers.app.MainActivity.class));
+                        } else {
+                            //USER UI
+                            startActivity(new Intent(this, app.MainActivity.class));
+                        }
+                        finish();
+                    })
+                    .addOnFailureListener(e -> {
+                        // fallback safety
+                        startActivity(new Intent(this, app.MainActivity.class));
+                        finish();
+                    });
+
             return;
         }
+
+        //NOT LOGGED IN -> SHOW GET STARTED SCREEN
         setContentView(R.layout.activity_getstarted);
 
         View main = findViewById(R.id.main);
@@ -46,10 +72,9 @@ public class GetStartedActivity extends AppCompatActivity {
         Button signup = findViewById(R.id.btnSignUp);
 
         login.setOnClickListener(v ->
-                startActivity(new Intent(this, Login.class)));
+                startActivity(new Intent(this, auth.Login.class)));
 
         signup.setOnClickListener(v ->
                 startActivity(new Intent(this, CreateAccount.class)));
-
     }
 }

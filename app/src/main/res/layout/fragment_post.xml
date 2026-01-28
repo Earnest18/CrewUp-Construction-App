@@ -92,6 +92,7 @@
 
                 <!-- Photo -->
                 <LinearLayout
+                    android:id="@+id/photo"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
@@ -99,10 +100,11 @@
                     android:orientation="horizontal">
 
                     <ImageView
+                        android:id="@+id/captureimg"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:src="@drawable/ic_photo"
-                        app:tint="#4CAF50"/>
+                        app:tint="#4CAF50" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -110,11 +112,12 @@
                         android:layout_marginStart="6dp"
                         android:text="Photo"
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp"/>
+                        android:textSize="13sp" />
                 </LinearLayout>
 
                 <!-- Video -->
                 <LinearLayout
+                    android:id="@+id/gallery"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
@@ -122,22 +125,25 @@
                     android:orientation="horizontal">
 
                     <ImageView
+                        android:id="@+id/btngallery"
                         android:layout_width="20dp"
                         android:layout_height="20dp"
-                        android:src="@drawable/ic_video"
-                        app:tint="#FF5722"/>
+                        android:src="@android:drawable/ic_menu_gallery"
+                        app:tint="#FF5722" />
 
                     <TextView
+                        android:id="@+id/gallery"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="6dp"
-                        android:text="Video"
+                        android:text="Gallery"
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp"/>
+                        android:textSize="13sp" />
                 </LinearLayout>
 
                 <!-- Event -->
                 <LinearLayout
+                    android:id="@+id/event"
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
@@ -148,7 +154,7 @@
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:src="@drawable/ic_event"
-                        app:tint="@color/primary"/>
+                        app:tint="@color/primary" />
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -156,7 +162,7 @@
                         android:layout_marginStart="6dp"
                         android:text="Event"
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp"/>
+                        android:textSize="13sp" />
                 </LinearLayout>
 
             </LinearLayout>

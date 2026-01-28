@@ -47,10 +47,20 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView txtLocation;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            startActivity(new Intent(this, auth.Login.class));
+            finish();
+            return;
+        }
+
         db = FirebaseFirestore.getInstance();
 
         View main = findViewById(R.id.main);

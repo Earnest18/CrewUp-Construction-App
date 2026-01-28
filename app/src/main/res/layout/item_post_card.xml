@@ -109,8 +109,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="4dp"
                         android:text="0"
-                        android:textSize="12sp"
-                        android:textColor="@color/text_secondary"/>
+                        android:textColor="@color/text_primary"
+                        android:textSize="12sp" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -126,7 +126,7 @@
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
-                    android:src="@drawable/ic_comment"
+                    android:src="@android:drawable/stat_notify_chat"
                     app:tint="@color/icon_comment" />
 
                 <TextView

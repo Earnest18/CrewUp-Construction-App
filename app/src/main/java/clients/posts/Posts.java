@@ -1,11 +1,15 @@
 package clients.posts;
 
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -38,8 +42,8 @@ public class Posts extends Fragment {
     private RecyclerView recyclerView;
     private TextInputEditText txtContent;
     private ImageButton btnSend;
-    private ImageView imgProfile;
-
+    private ImageView imgProfile, captureimg;
+    private LinearLayout photo, gallery;
     private FirebaseFirestore db;
     private ArrayList<Post> posts;
     private PostAdapter adapter;
@@ -78,6 +82,24 @@ public class Posts extends Fragment {
 
         txtContent = view.findViewById(R.id.edtPost);
         btnSend = view.findViewById(R.id.btnSend);
+        captureimg = view.findViewById(R.id.captureimg);
+        photo = view.findViewById(R.id.photo);
+        gallery = view.findViewById(R.id.gallery);
+
+        gallery.setOnClickListener(v -> {
+            //open camera
+            Intent in = new Intent();
+            in.setType("image/*");
+            in.setAction(Intent.ACTION_GET_CONTENT);
+
+            startActivityForResult(Intent.createChooser(in, "Select picture"), 1);
+        });
+
+        photo.setOnClickListener(v -> {
+            Intent in = new Intent(requireContext(), OnCamera.class);
+            startActivity(in);
+        });
+
 
         btnSend.setOnClickListener(v -> createPost());
 
@@ -168,14 +190,11 @@ public class Posts extends Fragment {
                                 currentUserProfilePicUrl
                         );
 
-                        // 🔥 REQUIRED FOR LIKES
                         post.setPostId(doc.getId());
 
-                        // 🔥 LIKE COUNT
                         Long likes = doc.getLong("likeCount");
                         post.setLikeCount(likes != null ? likes.intValue() : 0);
 
-                        // 🔥 CHECK IF CURRENT USER LIKED
                         String currentUserId = user.getUid();
                         db.collection("posts")
                                 .document(post.getPostId())
@@ -186,15 +205,11 @@ public class Posts extends Fragment {
                                     post.setLikedByMe(likeSnap.exists());
                                     adapter.notifyDataSetChanged();
                                 });
-
                         posts.add(post);
                     }
-
                     adapter.notifyDataSetChanged();
                 });
     }
-
-
 
     private String formatTimestamp(long millis) {
         return new SimpleDateFormat(

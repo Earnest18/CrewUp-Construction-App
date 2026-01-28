@@ -17,6 +17,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Fragments_Reyes">
         <activity
+            android:name="workers.home.NotificationsWorker"
+            android:exported="false" />
+        <activity
+            android:name="clients.posts.OnCamera"
+            android:exported="false" />
+        <activity
             android:name="clients.Notifications"
             android:exported="false" />
         <activity

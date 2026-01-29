@@ -49,6 +49,10 @@ public class SearchUserActivity extends AppCompatActivity {
             Insets systemBars =
                     insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
+            if (isFinishing() || isDestroyed()) {
+                return insets;
+            }
+
             v.setPadding(
                     systemBars.left,
                     systemBars.top,
@@ -98,7 +102,7 @@ public class SearchUserActivity extends AppCompatActivity {
 
     private void loadSearchResults(String text) {
         Query query = FirebaseFirestore.getInstance()
-                .collection("users")//edit to all users
+                .collection("users")
                 .orderBy("username_lower")
                 .startAt(text)
                 .endAt(text + "\uf8ff");
@@ -131,6 +135,13 @@ public class SearchUserActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         if (adapter != null) adapter.stopListening();
+    }
+    @Override
+    protected void onPostResume() {
+        super.onPostResume();
+        if(adapter!=null){
+            adapter.notifyDataSetChanged();
+        }
     }
 }
 

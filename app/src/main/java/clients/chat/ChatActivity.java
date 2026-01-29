@@ -146,7 +146,7 @@ public class ChatActivity extends AppCompatActivity {
         });
     }
 
-    /* ---------------- LOAD USER ---------------- */
+
 
     private void loadOtherUser() {
         FirebaseUtil.getUserReference(otherUserId)

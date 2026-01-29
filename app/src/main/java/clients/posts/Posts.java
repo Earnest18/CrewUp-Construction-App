@@ -12,8 +12,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -96,8 +98,7 @@ public class Posts extends Fragment {
         });
 
         photo.setOnClickListener(v -> {
-            Intent in = new Intent(requireContext(), OnCamera.class);
-            startActivity(in);
+
         });
 
 

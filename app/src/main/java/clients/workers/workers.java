@@ -37,7 +37,8 @@ public class workers extends Fragment {
         );
 
         Query query = FirebaseFirestore.getInstance()
-                .collection("workers");
+                .collection("users")
+                .whereEqualTo("Role", "worker");
 
         FirestoreRecyclerOptions<WorkerModel> options =
                 new FirestoreRecyclerOptions.Builder<WorkerModel>()

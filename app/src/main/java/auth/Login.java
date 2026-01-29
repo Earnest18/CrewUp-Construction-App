@@ -20,6 +20,7 @@ import app.CreateAccount;
 import com.example.ConstructionApp.R;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import app.MainActivity;
@@ -105,25 +106,46 @@ public class Login extends AppCompatActivity {
     }
 
     private void checkUserRole() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        db.collection("workers")
-                .document(uid)
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("users")
+                .document(user.getUid())
                 .get()
                 .addOnSuccessListener(doc -> {
-                    if (doc.exists()) {
-                        Toast.makeText(this, "Welcome Worker!", Toast.LENGTH_SHORT).show();
-                        startActivity(new Intent(this, workers.app.MainActivity.class));
-                        finish();
-                    } else {
+
+                    if (!doc.exists()) {
+                        // No user record → fallback
                         startActivity(new Intent(this, MainActivity.class));
                         finish();
+                        return;
                     }
+
+                    String role = doc.getString("Role");
+
+                    if ("worker".equals(role)) {
+
+                        Toast.makeText(this, "Welcome Worker!", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(this, workers.app.MainActivity.class));
+
+                    } else if ("client".equals(role)) {
+
+                        Toast.makeText(this, "Welcome Client!", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(this, MainActivity.class));
+
+                    } else {
+                        // Unknown role
+                        Toast.makeText(this, "Invalid user role", Toast.LENGTH_SHORT).show();
+                    }
+                    finish();
                 })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show()
-                );
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
+
     }
 }
 

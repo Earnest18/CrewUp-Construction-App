@@ -30,30 +30,11 @@ public class GetStartedActivity extends AppCompatActivity {
         if (auth.getCurrentUser() != null) {
             String uid = auth.getCurrentUser().getUid();
 
-            // 🔥 FAST ROLE CHECK
-            db.collection("workers")
-                    .document(uid)
-                    .get()
-                    .addOnSuccessListener(doc -> {
-                        if (doc.exists()) {
-                            //ORKER UI
-                            startActivity(new Intent(this, workers.app.MainActivity.class));
-                        } else {
-                            //USER UI
-                            startActivity(new Intent(this, app.MainActivity.class));
-                        }
-                        finish();
-                    })
-                    .addOnFailureListener(e -> {
-                        // fallback safety
-                        startActivity(new Intent(this, app.MainActivity.class));
-                        finish();
-                    });
+            checkUserRole(uid);
 
             return;
         }
 
-        //NOT LOGGED IN -> SHOW GET STARTED SCREEN
         setContentView(R.layout.activity_getstarted);
 
         View main = findViewById(R.id.main);
@@ -76,5 +57,47 @@ public class GetStartedActivity extends AppCompatActivity {
 
         signup.setOnClickListener(v ->
                 startActivity(new Intent(this, CreateAccount.class)));
+    }
+
+    private void checkUserRole(String uid) {
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) return;
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+        db.collection("users")
+                .document(uid)
+                .get()
+                .addOnSuccessListener(doc -> {
+
+                    if (!doc.exists()) {
+                        // No user record → fallback
+                        startActivity(new Intent(this, MainActivity.class));
+                        finish();
+                        return;
+                    }
+
+                    String role = doc.getString("Role");
+
+                    if ("worker".equals(role)) {
+
+                        Toast.makeText(this, "Welcome Worker!", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(this, workers.app.MainActivity.class));
+
+                    } else if ("client".equals(role)) {
+
+                        Toast.makeText(this, "Welcome Client!", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(this, MainActivity.class));
+
+                    } else {
+                        // Unknown role
+                        Toast.makeText(this, "Invalid user role", Toast.LENGTH_SHORT).show();
+                    }
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                });
     }
 }

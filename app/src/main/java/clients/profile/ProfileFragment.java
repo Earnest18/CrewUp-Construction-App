@@ -35,9 +35,9 @@ public class ProfileFragment extends Fragment {
 
     private FirebaseFirestore db;
     private Button logout;
-    private ImageView imgProfile;
+    private ImageView imgProfile, imgCoverPhoto;
     private Uri selectedImageUri;
-    private TextView username;
+    private TextView username, birthday, Gender, Location, Mobile, Social;
 
     private final ActivityResultLauncher<String> imagePickerLauncher =
             registerForActivityResult(
@@ -60,6 +60,27 @@ public class ProfileFragment extends Fragment {
                     }
               );
 
+    private final ActivityResultLauncher<String> CoverimagePickerLauncher =
+            registerForActivityResult(
+                    new ActivityResultContracts.GetContent(),
+                    uri -> {
+                        if (uri != null && isAdded()) {
+
+                            // Show preview immediately (good UX)
+                            Glide.with(requireContext())
+                                    .load(uri)
+                                    .centerCrop()
+                                    .into(imgCoverPhoto);
+
+                            // Upload to Cloudinary
+                            FirebaseUtil.uploadCoverProfilePic(
+                                    requireContext(),
+                                    uri
+                            );
+                        }
+                    }
+            );
+
     public ProfileFragment() {
 
     }
@@ -81,8 +102,14 @@ public class ProfileFragment extends Fragment {
         logout = view.findViewById(R.id.logout_btn);
         imgProfile = view.findViewById(R.id.imgProfile);
         username = view.findViewById(R.id.workertxtName);
+        imgCoverPhoto = view.findViewById(R.id.imgCoverPhoto);
+        birthday = view.findViewById(R.id.birthday);
+        Gender = view.findViewById(R.id.gender);
+        Location = view.findViewById(R.id.location);
+        Mobile = view.findViewById(R.id.mobile);
+        Social = view.findViewById(R.id.social);
 
-        loadUsername();
+        loaddetails();
 
         String uid = FirebaseUtil.currentUserId();
         if (uid != null && isAdded()) {
@@ -93,10 +120,24 @@ public class ProfileFragment extends Fragment {
             );
         }
 
+        String uidc = FirebaseUtil.currentUserId();
+        if (uidc != null && isAdded()) {
+            FirebaseUtil.CoverlistenToProfilePic(
+                    requireContext(),
+                    imgCoverPhoto,
+                    uidc
+            );
+        }
+
+        imgCoverPhoto.setOnClickListener(v -> {
+
+            permission(CoverimagePickerLauncher);
+
+        });
+
         imgProfile.setOnClickListener(v -> {
 
-            //add permisions first
-            imagePickerLauncher.launch("image/*");
+            permission(imagePickerLauncher);
         });
 
 
@@ -106,7 +147,7 @@ public class ProfileFragment extends Fragment {
             return view;
         }
 
-    private void loadUsername() {
+    private void loaddetails() {
         FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
         if (currentUser == null) return;
 
@@ -118,8 +159,18 @@ public class ProfileFragment extends Fragment {
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         String name = documentSnapshot.getString("username");
+                        String Birthday = documentSnapshot.getString("Birthday");
+                        String gender = documentSnapshot.getString("Gender");
+                        String location = documentSnapshot.getString("location");
+                        String mobile = documentSnapshot.getString("Mobile Number");
+                        String socials = documentSnapshot.getString("Social");
                         if (name != null) {
                             username.setText(name);
+                            birthday.setText(Birthday);
+                            Gender.setText(gender);
+                            Location.setText(location);
+                            Mobile.setText(mobile);
+                            Social.setText(socials);
                         }
       }});
     }
@@ -144,6 +195,16 @@ public class ProfileFragment extends Fragment {
                 })
                 .setNegativeButton("No", (dialog, which) ->
                         Toast.makeText(requireContext(), "Your wish is my command", Toast.LENGTH_SHORT).show())
+                .show();
+    }
+    private void  permission(ActivityResultLauncher act) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Location Permission")
+                .setMessage("Allow app to access your location?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", (d, w) -> act.launch("image/*"))
+                .setNegativeButton("No", (d, w) ->
+                        Toast.makeText(requireContext(), "We need permission of camera to proceed", Toast.LENGTH_SHORT).show())
                 .show();
     }
 }

@@ -160,7 +160,7 @@ public class FirebaseUtil {
                 .dispatch();
     }
 
-    public static void uploadProfilePicworkers(
+    public static void uploadCoverProfilePic(
             Context context,
             Uri imageUri
     ) {
@@ -175,7 +175,7 @@ public class FirebaseUtil {
 
                     @Override
                     public void onStart(String requestId) {
-                        Toast.makeText(context, "Uploading profile picture…", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Uploading cover picture…", Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
@@ -188,10 +188,10 @@ public class FirebaseUtil {
                         String imageUrl = resultData.get("secure_url").toString();
 
                         Map<String, Object> data = new HashMap<>();
-                        data.put("profilePicUrl", imageUrl);
+                        data.put("CoverprofilePicUrl", imageUrl);
 
                         FirebaseFirestore.getInstance()
-                                .collection("workers")
+                                .collection("users")
                                 .document(uid)
                                 .set(data, SetOptions.merge());
                     }
@@ -233,27 +233,26 @@ public class FirebaseUtil {
                 });
     }
 
-    public static void workerlistenToProfilePic(
+    public static void CoverlistenToProfilePic(
             Context context,
             ImageView imageView,
             String userId
     ) {
         if (userId == null) return;
-
         FirebaseFirestore.getInstance()
-                .collection("workers")
+                .collection("users")
                 .document(userId)
                 .addSnapshotListener((snapshot, e) -> {
 
                     if (e != null || snapshot == null || !snapshot.exists()) return;
 
-                    String url = snapshot.getString("profilePicUrl");
+                    String url = snapshot.getString("CoverprofilePicUrl");
                     if (url != null && !url.isEmpty()) {
 
                         Glide.with(context)
                                 .load(url)
-                                .placeholder(R.drawable.ic_profile_placeholder_foreground)
-                                .circleCrop()
+                                .placeholder(R.color.button_secondary)
+                                .centerCrop()
                                 .into(imageView);
                     }
                 });

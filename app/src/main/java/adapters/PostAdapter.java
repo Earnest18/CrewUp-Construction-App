@@ -1,6 +1,9 @@
 package adapters;
 
+import static androidx.core.content.ContextCompat.startActivity;
+
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +24,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import clients.profile.UserProfile;
 import models.Post;
 
 public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder> {
@@ -40,6 +44,9 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
 
         View view = LayoutInflater.from(context)
                 .inflate(R.layout.item_post_card, parent, false);
+
+
+
         return new PostViewHolder(view);
     }
 
@@ -56,6 +63,18 @@ public class PostAdapter extends RecyclerView.Adapter<PostAdapter.PostViewHolder
         holder.txtLikeCount.setText(
                 String.valueOf(post.getLikeCount())
         );
+
+        holder.imgProfile.setOnClickListener(v -> {
+            Intent profile = new Intent(context, UserProfile.class);
+            profile.putExtra("userId", post.getUserId());
+            context.startActivity(profile);
+        });
+
+        holder.txtName.setOnClickListener(v -> {
+            Intent profile = new Intent(context, UserProfile.class);
+            profile.putExtra("userId", post.getUserId());
+            context.startActivity(profile);
+        });
 
         holder.btnLike.setImageResource(
                 post.isLikedByMe()

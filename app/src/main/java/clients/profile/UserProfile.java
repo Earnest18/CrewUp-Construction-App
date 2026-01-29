@@ -46,7 +46,7 @@ public class UserProfile extends AppCompatActivity {
     private ArrayList<Post> posts;
     private final Map<String, String> profileCache = new HashMap<>();
     TextView username;
-    ImageView profile;
+    ImageView profile, imgCoverPhoto;
     ImageButton backBtn;
     Button button;
 
@@ -70,6 +70,7 @@ public class UserProfile extends AppCompatActivity {
         profile = findViewById(R.id.imgProfile);
         button = findViewById(R.id.btnMessage);
         backBtn = findViewById(R.id.back_btn);
+        imgCoverPhoto = findViewById(R.id.imgCoverPhoto);
 
         backBtn.setOnClickListener(v -> finish());
 
@@ -82,6 +83,24 @@ public class UserProfile extends AppCompatActivity {
         posts = new ArrayList<>();
 
         loadPosts();
+
+        FirebaseFirestore.getInstance()
+                .collection("users")
+                .document(userId)
+                .get()
+                .addOnSuccessListener(doc -> {
+                    if (!doc.exists()) return;
+
+                    username.setText(doc.getString("username"));
+
+                    String url = doc.getString("CoverprofilePicUrl");
+                    if (url != null && !url.isEmpty()) {
+                        Glide.with(this)
+                                .load(url)
+                                .centerCrop()
+                                .into(imgCoverPhoto);
+                    }
+                });
 
         FirebaseFirestore.getInstance()
                 .collection("users")
@@ -176,9 +195,6 @@ public class UserProfile extends AppCompatActivity {
                             post.setPostId(postDoc.getId());
                             post.setLikeCount(likeCount);
 
-                            posts.add(post);
-
-                            // 🔥 check if liked by current user
                             if (currentUserId != null) {
                                 db.collection("posts")
                                         .document(post.getPostId())
@@ -217,13 +233,11 @@ public class UserProfile extends AppCompatActivity {
                                             profilePicUrl
                                     );
 
-                                    // 🔥 REQUIRED FOR LIKES
                                     post.setPostId(postDoc.getId());
                                     post.setLikeCount(likeCount);
 
                                     posts.add(post);
 
-                                    // 🔥 check if liked by current user
                                     if (currentUserId != null) {
                                         db.collection("posts")
                                                 .document(post.getPostId())

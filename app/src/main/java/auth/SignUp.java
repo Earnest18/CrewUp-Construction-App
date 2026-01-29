@@ -42,18 +42,18 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import app.MainActivity;
-
 public class SignUp extends AppCompatActivity {
 
-    FirebaseAuth mAuth;
+    private FirebaseAuth mAuth;
     private FirebaseFirestore db;
+    private FusedLocationProviderClient fusedLocationClient;
 
     private static final int LOCATION_REQUEST_CODE = 100;
+    private static final String CHANNEL_ID = "crew_up_channel";
 
-    private FusedLocationProviderClient fusedLocationClient;
     private String userAddress = "";
-    String formattedName;
+
+    private TextInputEditText username, email, password, confirmPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,129 +61,215 @@ public class SignUp extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_sign_up);
 
+        mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        View root = findViewById(R.id.main);
+        ViewCompat.setOnApplyWindowInsetsListener(
+                findViewById(R.id.main),
+                (v, insets) -> {
+                    v.setPadding(
+                            insets.getInsets(WindowInsetsCompat.Type.systemBars()).left,
+                            insets.getInsets(WindowInsetsCompat.Type.systemBars()).top,
+                            insets.getInsets(WindowInsetsCompat.Type.systemBars()).right,
+                            insets.getInsets(WindowInsetsCompat.Type.systemBars()).bottom
+                    );
+                    return insets;
+                });
 
-        ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
-            Insets systemBars =
-                    insets.getInsets(WindowInsetsCompat.Type.systemBars());
+        username = findViewById(R.id.edtUsername);
+        email = findViewById(R.id.edtEmail);
+        password = findViewById(R.id.edtPassword);
+        confirmPassword = findViewById(R.id.edtConfirmPassword);
 
-            v.setPadding(
-                    systemBars.left,
-                    systemBars.top,
-                    systemBars.right,
-                    systemBars.bottom
-            );
-
-            return insets;
-        });
-        mAuth = FirebaseAuth.getInstance();
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
-        TextInputEditText username = findViewById(R.id.edtUsername);
-        TextInputEditText email = findViewById(R.id.edtEmail);
-        TextInputEditText password = findViewById(R.id.edtPassword);
-        TextInputEditText confirmpass = findViewById(R.id.edtConfirmPassword);
-
-        Button signin = findViewById(R.id.btnSignUp);
-        TextView login = findViewById(R.id.txtLogin);
+        Button btnSignUp = findViewById(R.id.btnSignUp);
+        TextView txtLogin = findViewById(R.id.txtLogin);
         ImageButton btnBack = findViewById(R.id.btnBack);
 
-        btnBack.setOnClickListener(view -> {
-            finish();
-        });
+        btnBack.setOnClickListener(v -> finish());
 
-        signin.setOnClickListener(view -> {
-            // Capitalize first letter of first and second word
-            String text = username.getText().toString().trim();
+        btnSignUp.setOnClickListener(v -> registerUser());
 
-            if (!text.isEmpty()) {
-                String[] parts = text.split("\\s+");
+        txtLogin.setOnClickListener(v ->
+                startActivity(new Intent(this, Login.class)));
+    }
 
-                for (int i = 0; i < parts.length && i < 2; i++) {
-                    if (parts[i].length() > 0) {
-                        parts[i] = parts[i].substring(0, 1).toUpperCase()
-                                + parts[i].substring(1).toLowerCase();
+    private void registerUser() {
+
+        String rawName = username.getText().toString().trim();
+        String emailTxt = email.getText().toString().trim();
+        String passTxt = password.getText().toString().trim();
+        String confirmTxt = confirmPassword.getText().toString().trim();
+
+        if (rawName.isEmpty() || emailTxt.isEmpty()
+                || passTxt.isEmpty() || confirmTxt.isEmpty()) {
+            Toast.makeText(this, "All fields are required", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (!passTxt.equals(confirmTxt)) {
+            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (passTxt.length() < 6) {
+            Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String formattedName = formatName(rawName);
+
+        mAuth.createUserWithEmailAndPassword(emailTxt, passTxt)
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+
+                        saveUserToFirestore(formattedName, emailTxt);
+                        createNotification(formattedName);
+                        showLocationDialog();
+
+                    } else {
+                        Toast.makeText(
+                                this,
+                                task.getException() != null
+                                        ? task.getException().getMessage()
+                                        : "Registration failed",
+                                Toast.LENGTH_LONG
+                        ).show();
                     }
-                }
+                });
+    }
 
-                formattedName = String.join(" ", parts);
+    private String formatName(String name) {
+        String[] parts = name.split("\\s+");
+        for (int i = 0; i < parts.length && i < 2; i++) {
+            parts[i] = parts[i].substring(0, 1).toUpperCase()
+                    + parts[i].substring(1).toLowerCase();
+        }
+        return String.join(" ", parts);
+    }
+
+    private void saveUserToFirestore(String username, String email) {
+
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user == null) return;
+
+        String role = getIntent().getStringExtra("client");
+        if (role == null) role = "client";
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("username", username);
+        data.put("username_lower", username.toLowerCase());
+        data.put("email", email);
+        data.put("Role", role);
+        data.put("createdAt", System.currentTimeMillis());
+
+        db.collection("users")
+                .document(user.getUid())
+                .set(data);
+    }
+
+    private void showLocationDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Location Permission")
+                .setMessage("Allow app to access your location?")
+                .setCancelable(false)
+                .setPositiveButton("Yes", (d, w) -> requestLocationPermission())
+                .setNegativeButton("No", (d, w) -> goToUserDetails())
+                .show();
+    }
+
+    private void requestLocationPermission() {
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_REQUEST_CODE);
+        } else {
+            getUserLocation();
+        }
+    }
+
+    private void getUserLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) return;
+
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(location -> {
+
+                    if (location != null) {
+                        double lat = location.getLatitude();
+                        double lng = location.getLongitude();
+                        userAddress = getAddressFromLocation(lat, lng);
+                        saveLocationToFirestore(userAddress, lat, lng);
+                    }
+                    goToUserDetails();
+                });
+    }
+
+    private String getAddressFromLocation(double lat, double lng) {
+        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+        try {
+            List<Address> addresses =
+                    geocoder.getFromLocation(lat, lng, 1);
+            if (addresses != null && !addresses.isEmpty()) {
+                Address a = addresses.get(0);
+                return a.getLocality() + ", " + a.getAdminArea();
             }
+        } catch (IOException e) {
+            Log.e("GEO", e.getMessage());
+        }
+        return "Unknown location";
+    }
 
-            String user = formattedName;
-            String emailTxt = email.getText().toString().trim();
-            String passTxt = password.getText().toString().trim();
-            String confirmTxt = confirmpass.getText().toString().trim();
+    private void saveLocationToFirestore(String address, double lat, double lng) {
 
-            if (user.isEmpty() || emailTxt.isEmpty() || passTxt.isEmpty() || confirmTxt.isEmpty()) {
-                Toast.makeText(this, "All fields are required", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        FirebaseUser user = mAuth.getCurrentUser();
+        if (user == null) return;
 
-            if (!passTxt.equals(confirmTxt)) {
-                Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        Map<String, Object> data = new HashMap<>();
+        data.put("location", address);
+        data.put("lat", lat);
+        data.put("lng", lng);
+        data.put("locationUpdatedAt", System.currentTimeMillis());
 
-            if (passTxt.length() < 6) {
-                Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        db.collection("users")
+                .document(user.getUid())
+                .update(data);
+    }
 
-            mAuth.createUserWithEmailAndPassword(emailTxt, passTxt)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            saveUserToFirestore(user, emailTxt);
-                            Toast.makeText(SignUp.this, "Registered Successfully!", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(this, MainActivity.class);
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
-                                    PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    private void goToUserDetails() {
+        Intent intent = new Intent(this, UserDetails.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
 
-                            showLocationDialog();
+    private void createNotification(String name) {
 
-                            NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-                            manager.cancel(1);
+        NotificationManager manager =
+                (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-                            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-                                NotificationChannel channel = new NotificationChannel("Crew Up", "Account Created Succesfully!", NotificationManager.IMPORTANCE_DEFAULT);
-                                manager.createNotificationChannel(channel);
-                            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel =
+                    new NotificationChannel(
+                            CHANNEL_ID,
+                            "Crew Up Notifications",
+                            NotificationManager.IMPORTANCE_DEFAULT
+                    );
+            manager.createNotificationChannel(channel);
+        }
 
-                            NotificationCompat.Builder builder = new NotificationCompat.Builder(this,"test")
-                                    .setSmallIcon(R.drawable.crewup_logo)
-                                    .setContentTitle("Account Created Succesfully!")
-                                    .setContentText("Welcome " + user + ", enjoy your journey with us!")
-                                    .setStyle(new NotificationCompat.BigTextStyle()
-                                            .bigText("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum."))
-                                    .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+        NotificationCompat.Builder builder =
+                new NotificationCompat.Builder(this, CHANNEL_ID)
+                        .setSmallIcon(R.drawable.crewup_logo)
+                        .setContentTitle("Account Created Successfully!")
+                        .setContentText("Welcome " + name + "!")
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT);
 
-                            manager.notify(1, builder.build());
-
-                            username.setText(null);
-                            email.setText(null);
-                            password.setText(null);
-                            confirmpass.setText(null);
-
-                        } else {
-                            Toast.makeText(SignUp.this,
-                                    task.getException().getMessage(),
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    });
-        });
-
-
-        login.setOnClickListener(view -> {
-            Intent in = new Intent(this, Login.class);
-            startActivity(in);
-        });
+        manager.notify(1, builder.build());
     }
 
     @Override
@@ -199,109 +285,8 @@ public class SignUp extends AppCompatActivity {
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 getUserLocation();
             } else {
-                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+                goToUserDetails();
             }
         }
-    }
-
-
-    private void showLocationDialog() {
-        new AlertDialog.Builder(this)
-                .setTitle("Location Permission")
-                .setMessage("Do you give this app permission to access your location?")
-                .setCancelable(false)
-                .setPositiveButton("Yes", (dialog, which) -> {
-                    Toast.makeText(this, "Location Enabled", Toast.LENGTH_SHORT).show();
-                    requestLocationPermission();
-                })
-                .setNegativeButton("No", (dialog, which) ->
-                        Toast.makeText(this, "Location Disabled", Toast.LENGTH_SHORT).show())
-                .show();
-    }
-
-    private void requestLocationPermission() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(
-                    this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                    LOCATION_REQUEST_CODE
-            );
-        } else {
-            getUserLocation();
-        }
-    }
-
-    private void getUserLocation() {
-        if (ActivityCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) return;
-
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(location -> {
-
-                    if (location != null) {
-                        double lat = location.getLatitude();
-                        double lng = location.getLongitude();
-
-                        userAddress = getAddressFromLocation(lat, lng);
-
-                        saveLocationToFirestore(userAddress, lat, lng);
-
-                        Log.d("LOCATION", userAddress);
-                    } else {
-                        Toast.makeText(this, "Unable to get location", Toast.LENGTH_SHORT).show();
-                    }
-                });
-    }
-
-
-    private String getAddressFromLocation(double lat, double lng) {
-        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-        try {
-            List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
-            if (addresses != null && !addresses.isEmpty()) {
-                Address address = addresses.get(0);
-                return address.getLocality() + ", " + address.getAdminArea();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return "Unknown location";
-    }
-
-    private void saveUserToFirestore(String username, String email) {
-        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        String status = getIntent().getStringExtra("client");
-
-        Map<String, Object> user = new HashMap<>();
-        user.put("username", username);
-        user.put("email", email);
-        user.put("createdAt", System.currentTimeMillis());
-        user.put("location", userAddress);
-        user.put("username_lower", username.toLowerCase());
-        user.put("Role", status);
-
-        db.collection("users")
-                .document(uid)
-                .set(user);
-    }
-
-    private void saveLocationToFirestore(String address, double lat, double lng) {
-
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        if (user == null) return;
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("location", address);
-        data.put("lat", lat);
-        data.put("lng", lng);
-        data.put("locationUpdatedAt", System.currentTimeMillis());
-
-        db.collection("users")
-                .document(user.getUid())
-                .update(data);
     }
 }

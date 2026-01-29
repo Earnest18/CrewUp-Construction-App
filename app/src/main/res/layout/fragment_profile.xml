@@ -22,14 +22,21 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Header Background -->
-            <View
-                android:id="@+id/headerBg"
+            <!-- ================= COVER PHOTO ================= -->
+            <FrameLayout
+                android:id="@+id/cover_container"
                 android:layout_width="match_parent"
-                android:layout_height="140dp"
-                android:background="#8E8E8E"/>
+                android:layout_height="180dp">
 
-            <!-- Profile Image + Edit Icon -->
+                <ImageView
+                    android:id="@+id/imgCoverPhoto"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:src="@color/button_secondary" />
+            </FrameLayout>
+
+            <!-- ================= PROFILE IMAGE ================= -->
             <FrameLayout
                 android:id="@+id/profileImageContainer"
                 android:layout_width="120dp"
@@ -39,11 +46,11 @@
 
                 <ImageView
                     android:id="@+id/imgProfile"
-                    android:layout_width="120dp"
-                    android:layout_height="120dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:background="@drawable/circle_bg"
                     android:scaleType="centerCrop"
-                    android:src="@drawable/ic_profile_placeholder_foreground" />
+                    android:src="@drawable/ic_profile_placeholder_foreground"/>
 
                 <ImageView
                     android:id="@+id/btnEditPhoto"
@@ -56,18 +63,19 @@
                     app:tint="@color/icon_like"/>
             </FrameLayout>
 
-            <!-- Profile Name -->
+            <!-- ================= NAME ================= -->
             <TextView
                 android:id="@+id/workertxtName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="12dp"
+                android:minHeight="24dp"
                 android:textColor="@color/text_primary"
                 android:textSize="20sp"
                 android:textStyle="bold" />
 
-            <!-- Personal Details Card -->
+            <!-- ================= PERSONAL DETAILS ================= -->
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -82,70 +90,129 @@
                     android:padding="16dp">
 
                     <!-- Card Header -->
+
                     <RelativeLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
                         <TextView
                             android:layout_width="wrap_content"
-                            android:layout_height="24dp"
+                            android:layout_height="wrap_content"
+                            android:minHeight="24dp"
                             android:text="Personal Details"
                             android:textColor="@color/text_primary"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"/>
 
                         <TextView
                             android:layout_width="wrap_content"
-                            android:layout_height="20dp"
+                            android:layout_height="wrap_content"
+                            android:minHeight="20dp"
                             android:layout_alignParentEnd="true"
                             android:text="Edit"
-                            android:textColor="#4DA6FF" />
+                            android:textColor="#4DA6FF"/>
                     </RelativeLayout>
 
                     <!-- Details -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="20dp"
-                        android:layout_marginTop="8dp"
-                        android:text="Birthdate"
-                        android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="20dp"
-                        android:text="Gender"
-                        android:textColor="@color/text_secondary" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="20dp"
-                        android:text="Live in where?"
-                        android:textColor="@color/bottom_nav_text" />
 
                     <!-- Contact Info -->
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Birthday" />
+
+                        <TextView
+                            android:id="@+id/birthday"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:text="August 18, 2005" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Gender" />
+
+                        <TextView
+                            android:id="@+id/gender"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:text="Male" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Location" />
+
+                        <TextView
+                            android:id="@+id/location"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:text="Imus, Cavite" />
+                    </RelativeLayout>
+
                     <TextView
                         android:layout_width="wrap_content"
-                        android:layout_height="24dp"
+                        android:layout_height="wrap_content"
+                        android:minHeight="24dp"
                         android:layout_marginTop="12dp"
                         android:text="Contact Info"
                         android:textColor="@color/text_primary"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="20dp"
-                        android:text="Mobile Number"
-                        android:textColor="@color/text_secondary" />
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="20dp"
-                        android:text="Social Media"
-                        android:textColor="@color/text_secondary" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Mobile Number" />
+
+                        <TextView
+                            android:id="@+id/mobile"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:text="0962-909-0803" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Socials" />
+
+                        <TextView
+                            android:id="@+id/social"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:text="https//fb.com" />
+                    </RelativeLayout>
 
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
-            <!-- Buttons -->
+            <!-- ================= BUTTONS ================= -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -158,40 +225,38 @@
                     android:backgroundTint="@color/button_secondary"
                     android:text="About"
                     android:textAllCaps="false"
-                    android:textColor="#F4B400" />
+                    android:textColor="#F4B400"/>
 
                 <Button
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="6dp"
                     android:backgroundTint="@color/button_secondary"
                     android:text="Manage Account"
                     android:textAllCaps="false"
-                    android:textColor="#F4B400" />
+                    android:textColor="#F4B400"/>
 
                 <Button
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="6dp"
                     android:backgroundTint="@color/button_secondary"
                     android:text="Developer’s Page"
                     android:textAllCaps="false"
-                    android:textColor="#F4B400" />
+                    android:textColor="#F4B400"/>
 
                 <Button
                     android:id="@+id/logout_btn"
                     android:layout_width="match_parent"
                     android:layout_height="44dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="6dp"
                     android:backgroundTint="@color/button_secondary"
                     android:text="Log-out"
                     android:textAllCaps="false"
-                    android:textColor="#FF3B30" />
-
+                    android:textColor="#FF3B30"/>
             </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

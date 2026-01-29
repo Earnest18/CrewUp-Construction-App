@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.firebase.messaging)
     implementation("com.google.firebase:firebase-messaging:24.0.0")
+    implementation(libs.legacy.support.v4)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

@@ -25,6 +25,5 @@ public class Splash_activity extends AppCompatActivity {
             startActivity(new Intent(Splash_activity.this, GetStartedActivity.class));
             finish();
         }, 10000);
-
     }
 }

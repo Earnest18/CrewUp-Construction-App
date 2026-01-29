@@ -198,24 +198,6 @@ public class MainActivity extends AppCompatActivity {
                 .addOnFailureListener(e ->
                         Log.e("FIRESTORE", "Failed to get location", e));
 
-        db.collection("workers")
-                .document(user.getUid())
-                .get()
-                .addOnSuccessListener(document -> {
-
-                    if (isFinishing() || isDestroyed() || document == null || !document.exists())
-                        return;
-
-                    userLocation = document.getString("location");
-
-                    if (userLocation != null && !userLocation.isEmpty()) {
-                        txtNewsFeed.setText(userLocation);
-                    } else {
-                        txtNewsFeed.setText("Location not specified");
-                    }
-                })
-                .addOnFailureListener(e ->
-                        Log.e("FIRESTORE", "Failed to get location", e));
     }
 
     void getFCMToken(){

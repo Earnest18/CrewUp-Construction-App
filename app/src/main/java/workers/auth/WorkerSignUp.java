@@ -152,7 +152,7 @@ public class WorkerSignUp extends AppCompatActivity {
         data.put("username", username);
         data.put("username_lower", username.toLowerCase());
         data.put("email", email);
-        data.put("role", "worker");
+        data.put("Role", "worker");
         data.put("createdAt", System.currentTimeMillis());
 
         db.collection("users")

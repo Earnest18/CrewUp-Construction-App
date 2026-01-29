@@ -203,7 +203,7 @@ public class WorkerProfile extends Fragment {
     private void permission(ActivityResultLauncher act) {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Location Permission")
-                .setMessage("Allow app to access your location?")
+                .setMessage("Allow app to access your gallery?")
                 .setCancelable(false)
                 .setPositiveButton("Yes", (d, w) -> act.launch("image/*"))
                 .setNegativeButton("No", (d, w) ->
